@@ -61,12 +61,12 @@ Make sure you each have an account on [gits-15.sys.kth.se](gits-15.sys.kth.se) (
 
     ```
     cd <path/to/your/il2212_surname1_surname2>
-    git remote add public git@gits-15.sys.kth.se:ingo/il2212-mpsoc.git
+    git remote add public git@gits-15.sys.kth.se:ugeorge/il2212-mpsoc.git
     git pull public master
     git push origin
     ```
     
-    - you now have a local copy with two remotes: `origin` is the remote to your private repository where you will commit your changes to; `public` is the remote to the original repository (`ingo/il2212-mpsoc`) where you get all the updates from.
+    - you now have a local copy with two remotes: `origin` is the remote to your private repository where you will commit your changes to; `public` is the remote to the original repository (`ugeorge/il2212-mpsoc`) where you get all the updates from.
 
 1. Make sure you are [watching](https://help.github.com/enterprise/2.3/user/articles/be-social/) the public repository, so that you are notified in the GitHub news feed whenever a change has been made. In case this occurs, you must [merge](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging) all the public changes into your local work flow, e.g.:
 
@@ -131,6 +131,6 @@ Here are some guidelines to ensure an efficient communication with the lab staff
 Here is a summary of the suggested workflow:
  * You create and clone a private repo. This is where you commit your work. The master branch shall contain your project in a compilable and runnable state.
  * The lab results (along with the other requirements) shall be present in the lab report, also available in the master branch under its respective directory path. They will be compared against the results given by the program's runtime.
- * Your local clone shall have a remote to the current public repository (git@gits-15.sys.kth.se:ingo/il2212-mpsoc.git), from where you have to (regularly) pull updates.
+ * Your local clone shall have a remote to the current public repository (git@gits-15.sys.kth.se:ugeorge/il2212-mpsoc.git), from where you have to (regularly) pull updates.
  * You are advised to use separate branches for different work packages which are regularly merged into the master branch. You are also advised to take advantage of the issue tracker to micromanage your work packages.
  * If you are assigned a specific task by the lab staff, you need to take care of it and announce (via tags or issue re-assignment) once it is fixed. 
