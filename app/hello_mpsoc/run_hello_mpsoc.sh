@@ -20,7 +20,7 @@ CORE_DIR=../../hardware/de2_nios2_mpsoc
 SOPCINFO=nios2_mpsoc
 SOF=de2_nios2_mpsoc
 CPU=cpu_
-NODES=5
+NODES=1
 
 
 if [[ `md5sum $CORE_DIR/$SOPCINFO.*` == `cat $CORE_DIR/.update.md5` ]] && [[ `md5sum $(basename $0)` == `cat .run.md5` ]]; then 
