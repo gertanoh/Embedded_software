@@ -19,21 +19,21 @@
 #define LED_GREEN_2 0x0002 
 #define LED_GREEN_4 0x0010 
 #define LED_GREEN_6 0x0040 
-
+extern void delay (int millisec);
 
 alt_mutex_dev *mutex_0;
 alt_mutex_dev *mutex_1;
 alt_mutex_dev *mutex_2;
 
-extern void delay (int millisec);
 
 
+int readFromFifo(int fifoId, int *tab);
 int writeToShared(int cpu_id, int value, int offset);
 void checkSwitch();
 int pollKeys();
 int readFromShared(int index, int *sharedAddress);
 void loopFunction(int n);
-int writeToHex(int *svalue);
+int writeToHex(int *value);
 
 static int b2sLUT[] = {0x40, //0
                  0x79, //1
@@ -70,43 +70,40 @@ int main()
 	mutex_2 = altera_avalon_mutex_open(MUTEX_2_NAME);
 	
 	
-	res = altera_avalon_fifo_init(FIFO_0_IN_CSR_BASE 0, 1, FIFO_0_IN_CSR_FIFO_DEPTH - 4);
+	res = altera_avalon_fifo_init(FIFO_0_IN_CSR_BASE, 0, 1, FIFO_0_IN_CSR_FIFO_DEPTH - 4);
 	
+    printf("Hello from cpu_0!\n");
 	/* reset the performance counter */
-	PERT_RESET(PERFORMANCE_COUNTER_0_BASE);
 	
-	
-	
-	printf("Hello from cpu_0!\n");
-    
-    /* Peformance testing */
-    PERF_RESET(PERFORMANCE_COUNTER_0_BASE);
-    
-    printf("writing to the fifo \n");
+    /* Start Measuring */
+      
+    //printf("writing to the fifo \n");
     
     /* write 5 to fifo */
     altera_avalon_mutex_lock(mutex_0, 1);
     /* after the mutex because we want to measure only the transfer time */
+    PERF_RESET(PERFORMANCE_COUNTER_0_BASE);
+    PERF_START_MEASURING (PERFORMANCE_COUNTER_0_BASE);  
     PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, SECTION_1);
     altera_avalon_fifo_write_fifo(FIFO_0_IN_BASE, FIFO_0_IN_CSR_BASE, 1);
     altera_avalon_fifo_write_fifo(FIFO_0_IN_BASE, FIFO_0_IN_CSR_BASE, 2);
     altera_avalon_fifo_write_fifo(FIFO_0_IN_BASE, FIFO_0_IN_CSR_BASE, 3);
     altera_avalon_fifo_write_fifo(FIFO_0_IN_BASE, FIFO_0_IN_CSR_BASE, 4);
     PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_1);
-    altera_avalon_mutex_unlock(mutex_0);
+    
+   altera_avalon_mutex_unlock(mutex_0);
     
     /* read five from fifo */
     PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, SECTION_2);
-    altera_avalon_fifo_read(FIFO_0_OUT_CSR_BASE);
-    altera_avalon_fifo_read(FIFO_0_OUT_CSR_BASE);
-    altera_avalon_fifo_read(FIFO_0_OUT_CSR_BASE);
-    altera_avalon_fifo_read(FIFO_0_OUT_CSR_BASE);
+    altera_avalon_fifo_read_fifo(FIFO_0_IN_BASE, FIFO_0_OUT_CSR_BASE);
+    altera_avalon_fifo_read_fifo(FIFO_0_IN_BASE, FIFO_0_OUT_CSR_BASE);
+    altera_avalon_fifo_read_fifo(FIFO_0_IN_BASE, FIFO_0_OUT_CSR_BASE);
+    altera_avalon_fifo_read_fifo(FIFO_0_IN_BASE, FIFO_0_OUT_CSR_BASE);
     PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_2);
     
     /* write 512 to shared memory */
     PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, SECTION_3);
-    int value = (unsigned char*) SHARED_ONCHIP_BASE + 1;
-    int i;
+    int *value = (unsigned char*) SHARED_ONCHIP_BASE + 1;
     for(i = 0 ; i < 512; i++){
         *(value + i) = i;
     }
@@ -118,7 +115,7 @@ int main()
     PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_4);
     
     /* Print measurement result */
-    perf_print_formatted_report(PERFORMANCE_COUNTER_O_BASE,
+    perf_print_formatted_report(PERFORMANCE_COUNTER_0_BASE,
                                 ALT_CPU_FREQ,
                                 4,
                                 "Write FIFO",
@@ -133,11 +130,13 @@ int main()
 	    checkSwitch();
 	    /* check the keys */
 	    keysValue = pollKeys();
-	    if(keysValue !=0 ){
+	    if(keysValue >=  0 ){
 	    
 	        res = readFromFifo(keysValue, hexTab);
 	        if( res == 0 ){
+	        printf(" res : %d\n", res);
 	            /* Display value on HEX */
+	            printf(" read %d %d %d %d \n", hexTab[0],hexTab[1],hexTab[2],hexTab[3]);
 	            writeToHex(hexTab);
             }
             else {
@@ -147,7 +146,7 @@ int main()
         }
         
         /* delay for the keys, and data to be filled */
-        delay(30);
+        delay(20);
    
 	}
 	return 0;
@@ -158,13 +157,13 @@ int main()
 /* Function to write to the shared memory */
 int writeToShared(int cpu_id, int value, int offset){
     
-    unsigned *char writeAddress;
-    writeAddress = (unsigned *char) SHARED_ONCHIP_BASE + 1 + offset;
+    unsigned char* writeAddress;
+    writeAddress = ((unsigned char*) SHARED_ONCHIP_BASE + 1 + offset);
     
     *writeAddress = value;
     
     /* set the cpu_id */
-    IOWR_8DIRECT(SHARED_ONCHIP_BASE, cpu_id);
+//    IOWR_8DIRECT(SHARED_ONCHIP_BASE, cpu_id, value);
     return 0;
     
 }
@@ -172,8 +171,8 @@ int writeToShared(int cpu_id, int value, int offset){
 /* Check the switch periodically */
 void checkSwitch(){
 
-    int switchValue = IORD(SWITCHES_BASE, 0);
-    printf("Swtich pressed : %d\n", switchValue);
+    IORD(SWITCHES_BASE, 0);
+//    printf("Swtich pressed : %d\n", switchValue);
     
     
 }
@@ -182,22 +181,23 @@ int pollKeys(){
 
     int keysValue = IORD(BUTTONS_BASE, 0);
     if(keysValue == 1){
-        IOWR(LEDS_GREEN_BASE, LED_GREEN_0);
-        return 1;
+        IOWR(LEDS_GREEN_BASE,0, LED_GREEN_0);
+        return 0;
     }
     else if(keysValue == 2){
-        IOWR(LEDS_GREEN_BASE, LED_GREEN_2);
-        return 2;
+        IOWR(LEDS_GREEN_BASE, 0,LED_GREEN_2);
+        return 1;
     }
     else if(keysValue == 4){
-        IOWR(LEDS_GREEN_BASE, LED_GREEN_4);
-        return 3;
+        IOWR(LEDS_GREEN_BASE, 0 ,LED_GREEN_4);
+        return 2;
+    }
     else if(keysValue == 8 ){
-        IOWR(LEDS_GREEN_BASE, LED_GREEN_6);
-        return 4;
+        IOWR(LEDS_GREEN_BASE, 0, LED_GREEN_6);
+        return 3;
     }
     else {
-        return 0;
+        return -1;
     }
 }
 
@@ -216,28 +216,29 @@ void loopFunction(int n){
 int readFromFifo(int fifoId, int *tab){
 
     int res = -1;
+    int i = 0;
     if(fifoId == 0 ){
-        if(altera_avalon_mutex_lock(mutex_0, 1) == 0 ){
-            if(altera_avalon_fifo_read_level(FIFO_0_OUT_CSR_BASE) >= 4) {
-                for(i = 0 ; i < 4 ; i++){
-                    tab[i] = altera_avalon_fifo_read(FIFO_0_OUT_CSR_BASE);
-                }
+        altera_avalon_mutex_lock(mutex_0, 1);
+        if(altera_avalon_fifo_read_level(FIFO_0_OUT_CSR_BASE) >= 4) {
+            for(i = 0 ; i < 4 ; i++){
+                tab[i] = altera_avalon_fifo_read_fifo(FIFO_0_OUT_BASE, FIFO_0_OUT_CSR_BASE);
             }
-            /* release mutex */
-            altera_avalon_mutex_unlock(mutex_0);
-            res = 0;
         }
+            /* release mutex */
+        altera_avalon_mutex_unlock(mutex_0);
+        res = 0;
+    
     }
     else if(fifoId == 1){
-        if(altera_avalon_mutex_lock(mutex_1, 1) == 0 ){
+        altera_avalon_mutex_lock(mutex_1, 1);
             if(altera_avalon_fifo_read_level(FIFO_1_OUT_CSR_BASE) >= 4) {
                 for(i = 0 ; i < 4 ; i++){
-                    tab[i] = altera_avalon_fifo_read(FIFO_1_OUT_CSR_BASE);
+                    tab[i] = altera_avalon_fifo_read_fifo(FIFO_1_OUT_BASE, FIFO_1_OUT_CSR_BASE);
                 }
             }
            altera_avalon_mutex_unlock(mutex_1); 
            res = 0; 
-        }
+        
     }
     
     return res;
@@ -253,13 +254,13 @@ int readFromShared(int index, int *sharedAddress){
         res = -1;
     }
     
-    unsigned *char value;
+    unsigned char* value;
     altera_avalon_mutex_lock(mutex_2, 1);
     value = (unsigned char*) SHARED_ONCHIP_BASE + 1 + 1024;
     for(i = 0 ; i < 4; i++){
         *(value + i) = *(sharedAddress + i);
     }
-    altera_avalon_mutex_unlock(mutex_2;
+    altera_avalon_mutex_unlock(mutex_2);
     
     return res;
 }
@@ -277,10 +278,10 @@ int writeToHex(int *value){
     int low3 = int2seven(*(value + 3) - ((*value + 3) / 10) * 10);
     
     out1 = high0 << 21 | low0 << 14 | high1 << 7 | low1;
-    IOWR(HEX3_HEX0_BASE, out1);
+    IOWR(HEX3_HEX0_BASE, 0, out1);
     
     out2 = high2 << 21 | low2 << 14 | high3 << 7 | low3;
-    IOWR(HEX7_HEX4_BASE, out1);
+    IOWR(HEX7_HEX4_BASE,0, out1);
     
     return 0;
 }

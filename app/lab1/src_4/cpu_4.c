@@ -81,10 +81,7 @@
 #include "sys/alt_stdio.h"
 #include <stdio.h>
 #include "system.h"
-#include "altera_avalon_pio_regs.h"
 #include "io.h"
-#include "altera_avalon_performance_counter.h"
-#include "altera_avalon_pio_regs.h"
 #include "altera_avalon_fifo_util.h"
 #include "altera_avalon_fifo_regs.h"
 #include "altera_avalon_mutex.h"
@@ -107,17 +104,18 @@ int readFromShared();
 
 /* write data to core_4, read data from core_4 and write data to core_0 */
 
+alt_mutex_dev *mutex_2;
 int main()
 {
     int tab[4] = {9, 17 , 25, 48};
     int i = 0;
     alt_putstr("Hello cpu_4!\n"); 
-    altera_mutex_dev *mutex_2 = altera_avalon_mutex_open(MUTEX_2_NAME);
+    mutex_2 = altera_avalon_mutex_open(MUTEX_2_NAME);
     
     
-    while (TRUE) {
+    while (1) {
     
-        delay(5);
+        delay(10);
         /* read from core_4 */
         readFromShared();
         
@@ -127,7 +125,7 @@ int main()
         /* write to core_0 */
         writeToShared(tab, 0);
         
-        dealy(30);
+        delay(30);
         for(i = 0 ; i < 4; i++){
             if(i %2 == 0){
                 tab[i] -= 1;
@@ -142,7 +140,7 @@ int main()
 
 int writeToShared(int *data, int cpu_id){
 
-    unsigned *char writeAddress;
+    unsigned char* writeAddress;
     int offset = 0;
     int i = 0;
     
@@ -155,13 +153,13 @@ int writeToShared(int *data, int cpu_id){
         /* core 4 */
         offset = 2048;
     }
-    writeAddress = (unsigned *char) SHARED_ONCHIP_BASE + 1 + offset;
+    writeAddress = (unsigned char*) SHARED_ONCHIP_BASE + 1 + offset;
     for(i = 0 ; i < 4; i++){
         *(writeAddress + i) = *(data + i);
     }
     
     /* set cpu_id */
-    IOWR_8DIRECT(SHARED_ONCHIP_BASE, cpu_id);
+    //IOWR_8DIRECT(SHARED_ONCHIP_BASE, cpu_id);
     
     altera_avalon_mutex_unlock(mutex_2);
     return 0;
@@ -171,7 +169,8 @@ int readFromShared(){
     /* data exchanged between core_3 and core_4 at SHARED_BASE + 2048
     */
     
-    unsigned *char value;
+    unsigned char* value;
+    int i = 0;
     altera_avalon_mutex_lock(mutex_2, 1);
     value = (unsigned char*) SHARED_ONCHIP_BASE + 1 + 2048;
     for(i = 0 ; i < 4; i++){

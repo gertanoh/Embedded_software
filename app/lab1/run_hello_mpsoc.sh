@@ -13,7 +13,7 @@
 
 echo "Setting up the build environment..."
 
-APP=hello_mpsoc
+APP=lab1
 BSP_DIR=../../bsp
 BSP=mpsoc_hello_mpsoc
 CORE_DIR=../../hardware/de2_nios2_mpsoc

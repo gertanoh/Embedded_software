@@ -16,7 +16,7 @@ int main(void)
 
 
  //printf("Sharedmemory!\n"); 
-  printf("Hello from cpu_0!\n");
+  printf("Hello from cpu_0, test!\n");
    //printf("Sharedmemory!\n"); 
   
  /* int * sharedmemory = (int *)0x102000;
