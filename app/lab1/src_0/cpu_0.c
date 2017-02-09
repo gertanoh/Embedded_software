@@ -283,6 +283,7 @@ int readFromShared(int index, int *sharedAddress){
     value = (unsigned char*) SHARED_ONCHIP_BASE + 1 + 1024;
     for(i = 0 ; i < 4; i++){
         *(value + i) = *(sharedAddress + i);
+        printf(" received data from cpu_%d : %d\n", index, *(value + i));
     }
     altera_avalon_mutex_unlock(mutex_2);
     
