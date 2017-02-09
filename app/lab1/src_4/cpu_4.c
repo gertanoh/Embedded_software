@@ -82,8 +82,6 @@
 #include <stdio.h>
 #include "system.h"
 #include "io.h"
-#include "altera_avalon_fifo_util.h"
-#include "altera_avalon_fifo_regs.h"
 #include "altera_avalon_mutex.h"
 #include "sys/alt_irq.h"
 #include "sys/alt_alarm.h"
@@ -103,7 +101,6 @@ int main()
 
 int writeToShared(int *data, int cpu_id);
 int readFromShared();
-int delay();
 /* write data to core_4, read data from core_4 and write data to core_0 */
 
 alt_mutex_dev *mutex_2;
@@ -117,17 +114,17 @@ int main()
     
     while (1) {
     
-       //delay(10);
+        //delay(10);
         /* read from core_4 */
+        altera_avalon_mutex_lock(mutex_2, 1);
         readFromShared();
-        
         /* write to core 4 */
         writeToShared(tab, 3);
-        
         /* write to core_0 */
-        writeToShared(tab, 0);
-        
-        //delay(30);
+         writeToShared(tab, 0);
+        altera_avalon_mutex_unlock(mutex_2);
+
+        delay(300);
         for(i = 0 ; i < 4; i++){
             if(i %2 == 0){
                 tab[i] -= 1;
@@ -146,10 +143,10 @@ int writeToShared(int *data, int cpu_id){
     int offset = 0;
     int i = 0;
     
-    altera_avalon_mutex_lock(mutex_2, 1);
+   // altera_avalon_mutex_lock(mutex_2, 1);
     if(cpu_id == 0){
         /* core 0*/
-        offset = 1024 + 4;
+        offset = 0 + 4;
     }
     else {
         /* core 4 */
@@ -161,7 +158,7 @@ int writeToShared(int *data, int cpu_id){
     }
     
     
-    altera_avalon_mutex_unlock(mutex_2);
+//    altera_avalon_mutex_unlock(mutex_2);
     return 0;
 }
 int readFromShared(){
@@ -171,27 +168,15 @@ int readFromShared(){
     
     unsigned char* value;
     int i = 0;
-    altera_avalon_mutex_lock(mutex_2, 1);
+  //  altera_avalon_mutex_lock(mutex_2, 1);
     value = (unsigned char*) SHARED_ONCHIP_BASE + 1 + 2048;
     for(i = 0 ; i < 4; i++){
         printf("Receivied from the core_3 : %d\n", *(value + i));
     }
-    altera_avalon_mutex_unlock(mutex_2);
+//    altera_avalon_mutex_unlock(mutex_2);
     
     return 0;
 }
 
-/* Implement a sort of delay because there is no delay function on cpu_4 */
-int delay(){
-    
-    int i = 0, j = 0;
-    int value;
-    for(i = 0; i < 2048; i++){
-        for(j = 0; j < 2048; j++){
-            value = j;
-         }
-     }
-     
-     return 0;
-}
+
 

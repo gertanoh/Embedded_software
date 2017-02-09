@@ -36,7 +36,6 @@ void checkSwitch();
 int pollKeys();
 int readFromShared(int index, int *sharedAddress);
 void loopFunction(int n);
-//void writeToHex(int value1, int value2[4]);
 static int b2sLUT[] = {0x40, //0
                  0x79, //1
                  0x24, //2
@@ -55,6 +54,23 @@ static int b2sLUT[] = {0x40, //0
  */
 int int2seven(int inval){
     return b2sLUT[inval];
+}
+
+int sev_seg_decoder(int inval)
+{
+    int temp = 0, final = 0;
+    temp = inval%10;
+    final =final + int2seven(temp);
+    inval = inval/10;
+    temp = inval%10;
+    final = final + (int2seven(temp)<<8);
+    inval = inval/10;
+    temp = inval%10;
+    final = final + (int2seven(temp)<<16);
+    inval = inval/10;
+    temp = inval%10;
+    final = final + (int2seven(temp)<<24);
+    return ~final;
 }
 
 
@@ -144,19 +160,15 @@ int main()
 	        printf(" res : %d\n", res);
 	            /* Display value on HEX */
 	            printf(" read %d %d %d %d \n", hexTab[0],hexTab[1],hexTab[2],hexTab[3]);
-	            //writeToHex(keysValue,hexTab);
-	            
-	            out_high = int2seven(hexTab[0]);
-                out_sign = int2seven(hexTab[1]);
-                out_low = int2seven(hexTab[3]);
-	            out2 = int2seven(0) << 21;//|out_sign << 7;
-	             out1 = int2seven(0) << 7   ;//| out_low;
-                 //IOWR_ALTERA_AVALON_PIO_DATA(DE2_PIO_HEX_LOW28_BASE,out2);
-                IOWR(HEX3_HEX0_BASE, 0,out1);
-                IOWR(HEX7_HEX4_BASE,0, out2);
+	    
+                IOWR(HEX3_HEX0_BASE, 0,sev_seg_decoder(hexTab[0]));
+                IOWR(HEX7_HEX4_BASE,0, sev_seg_decoder(hexTab[1]));
+                IOWR(HEX7_HEX4_BASE+4,0, sev_seg_decoder(hexTab[2]));
             }
-            else {
+           /* else {
+                altera_avalon_mutex_lock(mutex_2, 1);
                 readFromShared(keysValue, hexTab);
+                altera_avalon_mutex_unlock(mutex_2);
 	            //writeToHex(keysValue,hexTab);
 	            out_high = int2seven(hexTab[0]);
                 out_sign = int2seven(hexTab[1]);
@@ -166,7 +178,7 @@ int main()
                 IOWR(HEX3_HEX0_BASE, 0,out1);
                 IOWR(HEX7_HEX4_BASE,0, out2);
                 // IOWR_ALTERA_AVALON_PIO_DATA(DE2_PIO_HEX_LOW28_BASE,out1);
-            }
+            }*/
         }
         
         /* delay for the keys, and data to be filled */
@@ -187,7 +199,6 @@ int writeToShared(int cpu_id, int value, int offset){
     *writeAddress = value;
     
     /* set the cpu_id */
-//    IOWR_8DIRECT(SHARED_ONCHIP_BASE, cpu_id, value);
     return 0;
     
 }
@@ -196,7 +207,6 @@ int writeToShared(int cpu_id, int value, int offset){
 void checkSwitch(){
 
     IORD(SWITCHES_BASE, 0);
-//    printf("Swtich pressed : %d\n", switchValue);
     
     
 }
@@ -274,18 +284,22 @@ int readFromShared(int index, int *sharedAddress){
     
     int res = 0;
     int i = 0;
-    if( index < 3){
-        res = -1;
+    int offset = 0;
+    if( index  == 2){
+        offset = 0;
+    }
+    else if( index == 3 ){
+        offset = 0 + 4;
     }
     
     unsigned char* value;
-    altera_avalon_mutex_lock(mutex_2, 1);
-    value = (unsigned char*) SHARED_ONCHIP_BASE + 1 + 1024;
+   // altera_avalon_mutex_lock(mutex_2, 1);
+    value = (unsigned char*)( SHARED_ONCHIP_BASE + 1 + offset);
     for(i = 0 ; i < 4; i++){
         *(value + i) = *(sharedAddress + i);
-        printf(" received data from cpu_%d : %d\n", index, *(value + i));
+        printf(" received data from cpu_%d : %d\n", index+1, *(value + i));
     }
-    altera_avalon_mutex_unlock(mutex_2);
+   /// altera_avalon_mutex_unlock(mutex_2);
     
     return res;
 }

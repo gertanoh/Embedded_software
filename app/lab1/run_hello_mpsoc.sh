@@ -51,7 +51,10 @@ if [ ! -d $BSP_DIR/${BSP}_0 ] || [ "$REMAKE_BSP" = true ]; then
 		  --set hal.enable_lightweight_device_driver_api 1 \
 		  --set hal.enable_sopc_sysid_check 1 \
 		  --set hal.max_file_descriptors 4 \
+		  --set hal.enable_sim_optimize   0\
+		  --set hal.enable_clean_exit     0\
 		  --default_sections_mapping sram
+		  
 	echo " "
 	echo "BSP package creation finished"
 	echo " "

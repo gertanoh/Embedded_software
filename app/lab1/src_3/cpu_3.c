@@ -24,15 +24,18 @@ int main()
     
     while (TRUE) {
         /* write to core 4 */
+        altera_avalon_mutex_lock(mutex_2, 1);
         writeToShared(tab, 4);
-        delay(10);
+        altera_avalon_mutex_unlock(mutex_2);
+        delay(300);
         /* read from core_4 */
+        altera_avalon_mutex_lock(mutex_2, 1);
         readFromShared();
-        
+
         /* write to core_0 */
         writeToShared(tab, 0);
-        
-        delay(30);
+        altera_avalon_mutex_unlock(mutex_2);        
+        delay(300);
         for(i = 0 ; i < 4; i++){
             if(i %2 == 0){
                 tab[i] -= 1;
@@ -53,40 +56,43 @@ int readFromShared(){
     
     unsigned char* value;
     int i = 0;
-    altera_avalon_mutex_lock(mutex_2, 1);
+  //  altera_avalon_mutex_lock(mutex_2, 1);
     value = (unsigned char*) SHARED_ONCHIP_BASE + 1 + 2048;
     for(i = 0 ; i < 4; i++){
         printf("Receivied from the core_4 : %d\n", *(value + i));
     }
-    altera_avalon_mutex_unlock(mutex_2);
+  //  altera_avalon_mutex_unlock(mutex_2);
     
     return 0;
 }
 
 int writeToShared(int *data, int cpu_id){
 
-    unsigned char* writeAddress;
+    unsigned char * writeAddress;
     int offset = 0;
     int i = 0;
     
-    altera_avalon_mutex_lock(mutex_2, 1);
+   // altera_avalon_mutex_lock(mutex_2, 1);
     if(cpu_id == 0){
         /* core 0*/
-        offset = 1024 ;
+        offset = 0 ;
     }
-    else {
+    else if(cpu_id == 4)  {
         /* core 4 */
         offset = 2048;
     }
-    writeAddress = (unsigned char*) SHARED_ONCHIP_BASE + 1 + offset;
+    writeAddress = SHARED_ONCHIP_BASE ;
+    writeAddress += offset +1;
     for(i = 0 ; i < 4; i++){
         *(writeAddress + i) = *(data + i);
+        //printf(" address : %p\n",SHARED_ONCHIP_BASE); 
+        //printf(" value : %d\n", *(writeAddress + i));
     }
     
     /* set cpu_id */
     //IOWR_8DIRECT(SHARED_ONCHIP_BASE, cpu_id);
     
-    altera_avalon_mutex_unlock(mutex_2);
+    //altera_avalon_mutex_unlock(mutex_2);
     return 0;
 }
 
