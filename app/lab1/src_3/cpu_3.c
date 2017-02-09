@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include "system.h"
 #include "io.h"
-#include "altera_avalon_fifo_util.h"
-#include "altera_avalon_fifo_regs.h"
 #include "altera_avalon_mutex.h"
 
 
@@ -48,7 +46,7 @@ int main()
 }
 
 
-int readFromShared(int cpu_id){
+int readFromShared(){
 
     /* data exchanged between core_3 and core_4 at SHARED_BASE + 2048
     */
@@ -58,7 +56,7 @@ int readFromShared(int cpu_id){
     altera_avalon_mutex_lock(mutex_2, 1);
     value = (unsigned char*) SHARED_ONCHIP_BASE + 1 + 2048;
     for(i = 0 ; i < 4; i++){
-        printf("Receivied from the core_ %d : %d\n", cpu_id, *(value + i));
+        printf("Receivied from the core_4 : %d\n", *(value + i));
     }
     altera_avalon_mutex_unlock(mutex_2);
     
@@ -74,7 +72,7 @@ int writeToShared(int *data, int cpu_id){
     altera_avalon_mutex_lock(mutex_2, 1);
     if(cpu_id == 0){
         /* core 0*/
-        offset = 1024 + 4;
+        offset = 1024 ;
     }
     else {
         /* core 4 */

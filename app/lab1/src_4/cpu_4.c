@@ -101,7 +101,7 @@ int main()
 
 int writeToShared(int *data, int cpu_id);
 int readFromShared();
-
+int delay();
 /* write data to core_4, read data from core_4 and write data to core_0 */
 
 alt_mutex_dev *mutex_2;
@@ -120,7 +120,7 @@ int main()
         readFromShared();
         
         /* write to core 4 */
-        writeToShared(tab, 4);
+        writeToShared(tab, 3);
         
         /* write to core_0 */
         writeToShared(tab, 0);
@@ -158,8 +158,6 @@ int writeToShared(int *data, int cpu_id){
         *(writeAddress + i) = *(data + i);
     }
     
-    /* set cpu_id */
-    //IOWR_8DIRECT(SHARED_ONCHIP_BASE, cpu_id);
     
     altera_avalon_mutex_unlock(mutex_2);
     return 0;
@@ -181,4 +179,17 @@ int readFromShared(){
     return 0;
 }
 
+/* Implement a sort of delay because there is no delay function on cpu_4 */
+int delay(){
+    
+    int i = 0, j = 0;
+    int value;
+    for(i = 0; i < 2048; i++){
+        for(j = 0; j < 2048; j++){
+            value = j;
+         }
+     }
+     
+     return 0;
+}
 
