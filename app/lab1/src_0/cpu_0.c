@@ -7,6 +7,9 @@
 #include "altera_avalon_fifo_util.h"
 #include "altera_avalon_fifo_regs.h"
 #include "altera_avalon_mutex.h"
+#include "sys/alt_irq.h"
+#include "sys/alt_alarm.h"
+
 
 
 #define TRUE 1
@@ -33,8 +36,7 @@ void checkSwitch();
 int pollKeys();
 int readFromShared(int index, int *sharedAddress);
 void loopFunction(int n);
-int writeToHex(int *value);
-
+//void writeToHex(int value1, int value2[4]);
 static int b2sLUT[] = {0x40, //0
                  0x79, //1
                  0x24, //2
@@ -130,18 +132,40 @@ int main()
 	    checkSwitch();
 	    /* check the keys */
 	    keysValue = pollKeys();
+	    
 	    if(keysValue >=  0 ){
+	    int out_high = 0;
+         int out_low = 0;
+         int out_sign = 0;
+         int out1,out2;
 	    
 	        res = readFromFifo(keysValue, hexTab);
 	        if( res == 0 ){
 	        printf(" res : %d\n", res);
 	            /* Display value on HEX */
 	            printf(" read %d %d %d %d \n", hexTab[0],hexTab[1],hexTab[2],hexTab[3]);
-	            writeToHex(hexTab);
+	            //writeToHex(keysValue,hexTab);
+	            
+	            out_high = int2seven(hexTab[0]);
+                out_sign = int2seven(hexTab[1]);
+                out_low = int2seven(hexTab[3]);
+	            out2 = int2seven(0) << 21;//|out_sign << 7;
+	             out1 = int2seven(0) << 7   ;//| out_low;
+                 //IOWR_ALTERA_AVALON_PIO_DATA(DE2_PIO_HEX_LOW28_BASE,out2);
+                IOWR(HEX3_HEX0_BASE, 0,out1);
+                IOWR(HEX7_HEX4_BASE,0, out2);
             }
             else {
                 readFromShared(keysValue, hexTab);
-	            writeToHex(hexTab);
+	            //writeToHex(keysValue,hexTab);
+	            out_high = int2seven(hexTab[0]);
+                out_sign = int2seven(hexTab[1]);
+                out_low = int2seven(hexTab[3]);
+                out2 = int2seven(0)<< 21;//| out_sign << 7;
+                out1= int2seven(0) << 7  ;//| out_low;
+                IOWR(HEX3_HEX0_BASE, 0,out1);
+                IOWR(HEX7_HEX4_BASE,0, out2);
+                // IOWR_ALTERA_AVALON_PIO_DATA(DE2_PIO_HEX_LOW28_BASE,out1);
             }
         }
         
@@ -265,26 +289,43 @@ int readFromShared(int index, int *sharedAddress){
     return res;
 }
 
-int writeToHex(int *value){
+/*void writeToHex (int value1,int value2[4])
+{
+    int out_high = 0;
+    int out_low = 0;
+    int out_sign = 0;
+    int out1,out2,butt;
+    int * temp[4];
+    //*temp = value2;
+   // mutt=0;
+   // mutt=value1;
+    //butt = int2seven(value2);
     
-    int out1, out2;
-    int high0 = int2seven(*(value) / 10);
-    int low0 = int2seven(*(value) - ((*value) / 10) * 10);
-    int high1 = int2seven(*(value + 1) / 10);
-    int low1 = int2seven(*(value + 1) - ((*value + 1) / 10) * 10);
-    int high2 = int2seven(*(value + 2) / 10);
-    int low2 = int2seven(*(value + 2) - ((*value + 2) / 10) * 10);
-    int high3 = int2seven(*(value + 3) / 10);
-    int low3 = int2seven(*(value + 3) - ((*value + 3) / 10) * 10);
+    out_high = int2seven(0);
+    out_sign = int2seven(1);
+    out_low = int2seven(2);
+    printf("man = %d\n ", value2[0]);
+    /*int high0 = int2seven((value));
+    int low0 = int2seven((value));
+    int high1 = int2seven((value));
+    int low1 = int2seven((value));
+    int high2 = int2seven((value));
+    int low2 = int2seven((value));
+    int high3 = int2seven((value));
+    int low3 = int2seven((value));
+    IOWR(HEX3_HEX0_BASE, 0,(value));
+    IOWR(HEX7_HEX4_BASE,0, (value));*/
     
-    out1 = high0 << 21 | low0 << 14 | high1 << 7 | low1;
-    IOWR(HEX3_HEX0_BASE, 0, out1);
+    /*out2 = int2seven(5) << 21|out_sign << 14 ;
+    out1 = out_high << 7  | out_low;
+    //out1 = high0 << 21 | low0 << 14 | high1 << 7 | low1;
     
-    out2 = high2 << 21 | low2 << 14 | high3 << 7 | low3;
-    IOWR(HEX7_HEX4_BASE,0, out1);
     
-    return 0;
-}
+    //out2 = high2 << 21 | low2 << 14 | high3 << 7 | low3;
+    IOWR(HEX3_HEX0_BASE, 0,out1);
+    IOWR(HEX7_HEX4_BASE,0, out2);*/
+    
+    //return 0;
     
     
         

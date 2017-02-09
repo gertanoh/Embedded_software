@@ -85,7 +85,9 @@
 #include "altera_avalon_fifo_util.h"
 #include "altera_avalon_fifo_regs.h"
 #include "altera_avalon_mutex.h"
-
+#include "sys/alt_irq.h"
+#include "sys/alt_alarm.h"
+extern void delay (int millisec);
 /*
 int main()
 { 
@@ -115,7 +117,7 @@ int main()
     
     while (1) {
     
-        delay(10);
+       //delay(10);
         /* read from core_4 */
         readFromShared();
         
@@ -125,7 +127,7 @@ int main()
         /* write to core_0 */
         writeToShared(tab, 0);
         
-        delay(30);
+        //delay(30);
         for(i = 0 ; i < 4; i++){
             if(i %2 == 0){
                 tab[i] -= 1;
