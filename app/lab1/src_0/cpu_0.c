@@ -18,6 +18,19 @@
 #define SECTION_3 3
 #define SECTION_4 4
 
+
+#define LED_RED_0 0x00000001 // Engine
+#define LED_RED_1 0x00000002 // Top Gear
+#define LED_RED_2 0x00000004 // LED_RED_2
+#define LED_RED_3 0x00000008 
+#define LED_RED_12 0x00001000 // LED_RED_12
+#define LED_RED_13 0x00002000 // LED_RED_13
+#define LED_RED_14 0x00004000 // LED_RED_14
+#define LED_RED_15 0x00008000 // LED_RED_15
+#define LED_RED_16 0x00010000 // LED_RED_16
+#define LED_RED_17 0x00020000
+
+
 #define LED_GREEN_0 0x0001 
 #define LED_GREEN_2 0x0002 
 #define LED_GREEN_4 0x0010 
@@ -150,35 +163,21 @@ int main()
 	    keysValue = pollKeys();
 	    
 	    if(keysValue >=  0 ){
-	    int out_high = 0;
-         int out_low = 0;
-         int out_sign = 0;
-         int out1,out2;
-	    
 	        res = readFromFifo(keysValue, hexTab);
 	        if( res == 0 ){
-	        printf(" res : %d\n", res);
 	            /* Display value on HEX */
 	            printf(" read %d %d %d %d \n", hexTab[0],hexTab[1],hexTab[2],hexTab[3]);
 	    
-                IOWR(HEX3_HEX0_BASE, 0,sev_seg_decoder(hexTab[0]));
-                IOWR(HEX7_HEX4_BASE,0, sev_seg_decoder(hexTab[1]));
-                IOWR(HEX7_HEX4_BASE+4,0, sev_seg_decoder(hexTab[2]));
+                IOWR(HEX3_HEX0_BASE, 0,sev_seg_decoder(hexTab[0] + hexTab[1] * 100));
+                IOWR(HEX7_HEX4_BASE,0, sev_seg_decoder(hexTab[2] + hexTab[3] *100));
             }
-           /* else {
+            else {
                 altera_avalon_mutex_lock(mutex_2, 1);
                 readFromShared(keysValue, hexTab);
+                IOWR(HEX3_HEX0_BASE, 0,sev_seg_decoder(hexTab[0] + hexTab[1] * 100));
+                IOWR(HEX7_HEX4_BASE,0, sev_seg_decoder(hexTab[2] + hexTab[3] *100));
                 altera_avalon_mutex_unlock(mutex_2);
-	            //writeToHex(keysValue,hexTab);
-	            out_high = int2seven(hexTab[0]);
-                out_sign = int2seven(hexTab[1]);
-                out_low = int2seven(hexTab[3]);
-                out2 = int2seven(0)<< 21;//| out_sign << 7;
-                out1= int2seven(0) << 7  ;//| out_low;
-                IOWR(HEX3_HEX0_BASE, 0,out1);
-                IOWR(HEX7_HEX4_BASE,0, out2);
-                // IOWR_ALTERA_AVALON_PIO_DATA(DE2_PIO_HEX_LOW28_BASE,out1);
-            }*/
+            }
         }
         
         /* delay for the keys, and data to be filled */
@@ -206,8 +205,11 @@ int writeToShared(int cpu_id, int value, int offset){
 /* Check the switch periodically */
 void checkSwitch(){
 
-    IORD(SWITCHES_BASE, 0);
-    
+    int  value = 0;
+    value = IORD(SWITCHES_BASE, 0);
+    int led_value = 0;
+    led_value = value;
+    IOWR(LEDS_RED_BASE, 0 , led_value);
     
 }
 
@@ -289,58 +291,17 @@ int readFromShared(int index, int *sharedAddress){
         offset = 0;
     }
     else if( index == 3 ){
-        offset = 0 + 4;
+        offset = 0 + 10;
     }
     
     unsigned char* value;
-   // altera_avalon_mutex_lock(mutex_2, 1);
     value = (unsigned char*)( SHARED_ONCHIP_BASE + 1 + offset);
     for(i = 0 ; i < 4; i++){
         *(value + i) = *(sharedAddress + i);
         printf(" received data from cpu_%d : %d\n", index+1, *(value + i));
     }
-   /// altera_avalon_mutex_unlock(mutex_2);
     
     return res;
 }
 
-/*void writeToHex (int value1,int value2[4])
-{
-    int out_high = 0;
-    int out_low = 0;
-    int out_sign = 0;
-    int out1,out2,butt;
-    int * temp[4];
-    //*temp = value2;
-   // mutt=0;
-   // mutt=value1;
-    //butt = int2seven(value2);
-    
-    out_high = int2seven(0);
-    out_sign = int2seven(1);
-    out_low = int2seven(2);
-    printf("man = %d\n ", value2[0]);
-    /*int high0 = int2seven((value));
-    int low0 = int2seven((value));
-    int high1 = int2seven((value));
-    int low1 = int2seven((value));
-    int high2 = int2seven((value));
-    int low2 = int2seven((value));
-    int high3 = int2seven((value));
-    int low3 = int2seven((value));
-    IOWR(HEX3_HEX0_BASE, 0,(value));
-    IOWR(HEX7_HEX4_BASE,0, (value));*/
-    
-    /*out2 = int2seven(5) << 21|out_sign << 14 ;
-    out1 = out_high << 7  | out_low;
-    //out1 = high0 << 21 | low0 << 14 | high1 << 7 | low1;
-    
-    
-    //out2 = high2 << 21 | low2 << 14 | high3 << 7 | low3;
-    IOWR(HEX3_HEX0_BASE, 0,out1);
-    IOWR(HEX7_HEX4_BASE,0, out2);*/
-    
-    //return 0;
-    
-    
         

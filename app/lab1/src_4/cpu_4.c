@@ -114,17 +114,16 @@ int main()
     
     while (1) {
     
-        //delay(10);
         /* read from core_4 */
         altera_avalon_mutex_lock(mutex_2, 1);
         readFromShared();
-        /* write to core 4 */
+        /* write to core 3 */
         writeToShared(tab, 3);
         /* write to core_0 */
-         writeToShared(tab, 0);
+        writeToShared(tab, 0);
         altera_avalon_mutex_unlock(mutex_2);
 
-        delay(300);
+        delay(30);
         for(i = 0 ; i < 4; i++){
             if(i %2 == 0){
                 tab[i] -= 1;
@@ -132,6 +131,7 @@ int main()
             else {
                 tab[i] += 2;
             }
+            if(tab[i] >= 100)  tab[i] = tab[i] / 2; 
         }
     }
     return 0;
@@ -143,13 +143,12 @@ int writeToShared(int *data, int cpu_id){
     int offset = 0;
     int i = 0;
     
-   // altera_avalon_mutex_lock(mutex_2, 1);
     if(cpu_id == 0){
         /* core 0*/
-        offset = 0 + 4;
+        offset = 0 + 10;
     }
-    else {
-        /* core 4 */
+    else if(cpu_id == 3) {
+        /* core 3 */
         offset = 2048;
     }
     writeAddress = (unsigned char*) SHARED_ONCHIP_BASE + 1 + offset;
@@ -158,7 +157,6 @@ int writeToShared(int *data, int cpu_id){
     }
     
     
-//    altera_avalon_mutex_unlock(mutex_2);
     return 0;
 }
 int readFromShared(){
@@ -168,12 +166,10 @@ int readFromShared(){
     
     unsigned char* value;
     int i = 0;
-  //  altera_avalon_mutex_lock(mutex_2, 1);
     value = (unsigned char*) SHARED_ONCHIP_BASE + 1 + 2048;
     for(i = 0 ; i < 4; i++){
         printf("Receivied from the core_3 : %d\n", *(value + i));
     }
-//    altera_avalon_mutex_unlock(mutex_2);
     
     return 0;
 }
