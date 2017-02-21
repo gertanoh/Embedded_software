@@ -1,186 +1,166 @@
-/* 
- * "Small Hello World" example. 
- * 
- * This example prints 'Hello from Nios II' to the STDOUT stream. It runs on
- * the Nios II 'standard', 'full_featured', 'fast', and 'low_cost' example 
- * designs. It requires a STDOUT  device in your system's hardware. 
- *
- * The purpose of this example is to demonstrate the smallest possible Hello 
- * World application, using the Nios II HAL library.  The memory footprint
- * of this hosted application is ~332 bytes by default using the standard 
- * reference design.  For a more fully featured Hello World application
- * example, see the example titled "Hello World".
- *
- * The memory footprint of this example has been reduced by making the
- * following changes to the normal "Hello World" example.
- * Check in the Nios II Software Developers Manual for a more complete 
- * description.
- * 
- * In the SW Application project (small_hello_world):
- *
- *  - In the C/C++ Build page
- * 
- *    - Set the Optimization Level to -Os
- * 
- * In System Library project (small_hello_world_syslib):
- *  - In the C/C++ Build page
- * 
- *    - Set the Optimization Level to -Os
- * 
- *    - Define the preprocessor option ALT_NO_INSTRUCTION_EMULATION 
- *      This removes software exception handling, which means that you cannot 
- *      run code compiled for Nios II cpu with a hardware multiplier on a core 
- *      without a the multiply unit. Check the Nios II Software Developers 
- *      Manual for more details.
- *
- *  - In the System Library page:
- *    - Set Periodic system timer and Timestamp timer to none
- *      This prevents the automatic inclusion of the timer driver.
- *
- *    - Set Max file descriptors to 4
- *      This reduces the size of the file handle pool.
- *
- *    - Check Main function does not exit
- *    - Uncheck Clean exit (flush buffers)
- *      This removes the unneeded call to exit when main returns, since it
- *      won't.
- *
- *    - Check Don't use C++
- *      This builds without the C++ support code.
- *
- *    - Check Small C library
- *      This uses a reduced functionality C library, which lacks  
- *      support for buffering, file IO, floating point and getch(), etc. 
- *      Check the Nios II Software Developers Manual for a complete list.
- *
- *    - Check Reduced device drivers
- *      This uses reduced functionality drivers if they're available. For the
- *      standard design this means you get polled UART and JTAG UART drivers,
- *      no support for the LCD driver and you lose the ability to program 
- *      CFI compliant flash devices.
- *
- *    - Check Access device drivers directly
- *      This bypasses the device file system to access device drivers directly.
- *      This eliminates the space required for the device file system services.
- *      It also provides a HAL version of libc services that access the drivers
- *      directly, further reducing space. Only a limited number of libc
- *      functions are available in this configuration.
- *
- *    - Use ALT versions of stdio routines:
- *
- *           Function                  Description
- *        ===============  =====================================
- *        alt_printf       Only supports %s, %x, and %c ( < 1 Kbyte)
- *        alt_putstr       Smaller overhead than puts with direct drivers
- *                         Note this function doesn't add a newline.
- *        alt_putchar      Smaller overhead than putchar with direct drivers
- *        alt_getchar      Smaller overhead than getchar with direct drivers
- *
- */
-
-#include "sys/alt_stdio.h"
 #include <stdio.h>
 #include "system.h"
-#include "io.h"
-#include "altera_avalon_fifo_util.h"
-#include "altera_avalon_fifo_regs.h"
 #include "altera_avalon_mutex.h"
-#include "sys/alt_irq.h"
-#include "sys/alt_alarm.h"
+
+
+#define TRUE 1
 extern void delay (int millisec);
+
+unsigned char sqrtImproved(int x);
 /*
-int main()
-{ 
-  alt_putstr("Hello cpu_4!\n");
+void graycolor ()
+{
+    int x = 0 ,y = 0;
+    unsigned char*  gray = (unsigned char*) SHARED_ONCHIP_BASE;
+    int size_x= *gray++;
+    int size_y = *gray++;
+    gray++;
+    //cpu_3 works on a quarter of the memory from x/2 to x and y/2 to y
+    gray += (size_y>>1)*size_x + (size_x >> 1);
+    size_x = size_x >> 1;
+    size_y = size_y >> 1;
+    unsigned char* alpha = (unsigned char*) SHARED_ONCHIP_BASE;
+    double L = 0 ;
+    alpha= gray;
+    double red = 0.3125;
+    double green = 0.5625;
+    double blue = 0.125;
+    for(y = 0; y < size_y; y++)
+	    for(x = 0; x < size_x; x++)
+	    {
+	        L = red * *gray++ + green * *gray++ + blue * *gray++;
+	        *alpha++ = L;
+        }
+}*/
+/*
+void resize()
+{
+   int x = 0 ,y = 0; //Henry
+    unsigned char*  gray = (unsigned char*) SHARED_ONCHIP_BASE;
+    int size_x= *gray++;
+    int size_y = *gray++;
+    gray++;
+    //cpu_2 works on a quarter of the memory from x/2 to x and y/2 to y
+    gray += (size_y>>1)*size_x + (size_x >> 1);
+    size_x = size_x >> 1;
+    size_y = size_y >> 1;
+    unsigned char* resize_imaged ;
+    resize_imaged = gray;
+    
+    size_x = size_x >> 1;
+    size_y = size_y >> 1;
+    
+    for(y = 0; y < size_y  ; y++)
+        for( x = 0; x < size_x; x++){
+            *resize_imaged++ = ( *gray + *(gray + 1) + *(gray + size_x)  + *(gray + size_x  + 1) ) / 4 ;
+            gray = gray + 2;
+        }
+}*/
+void edge_detection()
+{
+    int x = 0  ,y = 0;
+    unsigned char*  pixel_pointer = (unsigned char*) SHARED_ONCHIP_BASE;
 
-  // Event loop never exits. 
-  while (1);
+ 
+    
+    int size_x= (*pixel_pointer++);
+    int size_y = (*pixel_pointer++);
+    pixel_pointer++;
+    
+    size_x = size_x >> 1;
+    size_y = size_y >> 1;
+     /*cpu_2 works on a quarter of the memory from x/2 to x and y/2 to y*/
+    pixel_pointer += (size_y>>1)*size_x + (size_x >> 1);
+    size_x = size_x >> 1;
+    size_y = size_y >> 1;
+    // we put the data at the end of the old so no overwriting
+    unsigned char* edge_value = (unsigned char*) ( pixel_pointer + ((size_x)) * ((size_y)) );    
+    /* kernels */
+    
+        
+    int tmp_x;
+    int tmp_y; 
+    for( y = 0; y < size_y - 2; y++)
+        for( x = 0; x < size_x - 2; x++){
+            // apply the sobel operator on each pixel
+            tmp_x = (-(*pixel_pointer)) + ((*(pixel_pointer + 2)))+
+            (-2 * (*(pixel_pointer + size_x))) + (2 * (*(pixel_pointer + 2 + size_x)))+
+            (-(*(pixel_pointer + (2*size_x) ) ))  + ((*(pixel_pointer + 2 + (2*size_x))));
+            
+            tmp_y = (-(*pixel_pointer)) + (-2 * (*(pixel_pointer + 1))) + (-(*(pixel_pointer + 2)))+
+            ((*(pixel_pointer + 2 * size_x))) + (2 * (*(pixel_pointer + 1+ 2 * size_x))) +  *(pixel_pointer + 2 + (2*size_x) );
 
+            *edge_value++ = sqrtImproved(tmp_x * tmp_x + tmp_y * tmp_y );
+            //edge_value++;
+            pixel_pointer++;
+        }
+     
+     
+}     
+unsigned char sqrtImproved(int x){
+
+    /*use of unsigned char because max color is 255 */
+    /* square root function */
+    double rt = 1, ort = 0;
+    while(ort != rt){
+        ort = rt;
+        rt = ((x/rt) + rt ) / 2;
+    }
+    
+    return (unsigned char) rt;
+}
+
+void image_to_ascii(){
+    
+    int x = 0  ,y = 0;  
+    unsigned char*  pixel_pointer = (unsigned char*) SHARED_ONCHIP_BASE;
+
+    // The picture is now half sized
+    int size_x= (*pixel_pointer++);
+    int size_y = (*pixel_pointer++);
+    pixel_pointer++;
+    /*cpu_2 works on a quarter of the memory from x/2 to x and y/2 to y*/
+    pixel_pointer += size_x * (size_y>>1) + (size_x >> 1);
+    size_x = size_x >> 1;
+    size_y = size_y >> 1;
+    
+    /* mnew size of the pciture */
+    size_x = size_x >> 1;
+    size_y = size_y >> 1;
+    
+    unsigned char* toshared;
+    toshared = pixel_pointer;
+    //char symbols[] = {' ','-','.','_', ':', '=', '+','*', 'i','x','#','$','g','&','%','@' };
+    char symbols[] =  {'@','%','&','m','$','o','x','i','*','+', '=', ':', '_', '.', '-',' ' };
+    
+            
+    for( y = 0; y < size_y; y++){
+        for( x = 0; x < size_x; x++){
+            char symbol = '\0';
+                int saturation = (int) ( ( (*pixel_pointer++)/255.0 )* 15 );
+                symbol = symbols[saturation];
+                *toshared++ = symbol;  
+        }
+        
+    }
+}
+int main(void) {
+
+
+	alt_mutex_dev* mutex_4 = altera_avalon_mutex_open(MUTEX_4_NAME);
+	while (1) {
+	
+        altera_avalon_mutex_lock(mutex_4,1);
+	    //graycolor();
+        //resize();
+        //edge_detection();	
+        image_to_ascii();
+        altera_avalon_mutex_unlock(mutex_4);
+        //printf("unlock 3\n");
+                delay(2);
+        /*small sleep to enable the cpu 0 to work */
+            
+      } 
+     
   return 0;
 }
-*/
-
-
-int writeToShared(int *data, int cpu_id);
-int readFromShared();
-
-/* write data to core_4, read data from core_4 and write data to core_0 */
-
-alt_mutex_dev *mutex_2;
-int main()
-{
-    int tab[4] = {9, 17 , 25, 48};
-    int i = 0;
-    alt_putstr("Hello cpu_4!\n"); 
-    mutex_2 = altera_avalon_mutex_open(MUTEX_2_NAME);
-    
-    
-    while (1) {
-    
-       //delay(10);
-        /* read from core_4 */
-        readFromShared();
-        
-        /* write to core 4 */
-        writeToShared(tab, 4);
-        
-        /* write to core_0 */
-        writeToShared(tab, 0);
-        
-        //delay(30);
-        for(i = 0 ; i < 4; i++){
-            if(i %2 == 0){
-                tab[i] -= 1;
-            }
-            else {
-                tab[i] += 2;
-            }
-        }
-    }
-    return 0;
-}
-
-int writeToShared(int *data, int cpu_id){
-
-    unsigned char* writeAddress;
-    int offset = 0;
-    int i = 0;
-    
-    altera_avalon_mutex_lock(mutex_2, 1);
-    if(cpu_id == 0){
-        /* core 0*/
-        offset = 1024 + 4;
-    }
-    else {
-        /* core 4 */
-        offset = 2048;
-    }
-    writeAddress = (unsigned char*) SHARED_ONCHIP_BASE + 1 + offset;
-    for(i = 0 ; i < 4; i++){
-        *(writeAddress + i) = *(data + i);
-    }
-    
-    /* set cpu_id */
-    //IOWR_8DIRECT(SHARED_ONCHIP_BASE, cpu_id);
-    
-    altera_avalon_mutex_unlock(mutex_2);
-    return 0;
-}
-int readFromShared(){
-
-    /* data exchanged between core_3 and core_4 at SHARED_BASE + 2048
-    */
-    
-    unsigned char* value;
-    int i = 0;
-    altera_avalon_mutex_lock(mutex_2, 1);
-    value = (unsigned char*) SHARED_ONCHIP_BASE + 1 + 2048;
-    for(i = 0 ; i < 4; i++){
-        printf("Receivied from the core_3 : %d\n", *(value + i));
-    }
-    altera_avalon_mutex_unlock(mutex_2);
-    
-    return 0;
-}
-
-

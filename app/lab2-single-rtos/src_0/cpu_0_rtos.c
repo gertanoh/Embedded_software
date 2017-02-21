@@ -1,8 +1,3 @@
-// Skeleton for lab 2
-// 
-// Task 1 writes periodically RGB-images to the shared memory
-//
-// No guarantees provided - if bugs are detected, report them in the Issue tracker of the github repository!
 
 #include <stdio.h>
 #include "altera_avalon_performance_counter.h"
@@ -56,14 +51,12 @@ void sram2sm_p3(unsigned char* base)
 	*shared++  = size_x;
 	*shared++  = size_y;
 	*shared++  = max_col;
-	printf("The image is: %d x %d!! \n", size_x, size_y);
 	for(y = 0; y < size_y; y++)
 	for(x = 0; x < size_x; x++)
 	{
 		*shared++ = *base++; 	// R
         *shared++ = *base++;	// G
 		*shared++ = *base++;	// B
-		//printf("The grayscale is: %d \n " , Y);
 
 	   
 	}
@@ -74,66 +67,38 @@ void graycolor ()
     unsigned char*  gray = (unsigned char*) SHARED_ONCHIP_BASE;
     int size_x= *gray++;
     int size_y = *gray++;
-    int max_col = *gray++;
+    gray++;
     unsigned char* alpha = (unsigned char*) SHARED_ONCHIP_BASE;
     double L ;
     alpha= gray;
-   // *Y = *(max_col);
+    double red = 0.3125;
+	        double green = 0.5625;
+	        double blue = 0.125;
     for(y = 0; y < size_y; y++)
 	    for(x = 0; x < size_x; x++)
 	    {
-	        double red = 0.3125;
-	        double green = 0.5625;
-	        double blue = 0.125;
+	        
 	        L = red * *gray++ + green * *gray++ + blue * *gray++;
 	        *alpha++ = L;
-            //gray = (unsigned char*) SHARED_ONCHIP_BASE;
-            //printf("The grayscale is: %d \n " , *L);
-            //gray++;
-           // *
+        
         }
 }
 void resize()
 {
-   /*int x ,y;
-    unsigned char*  gray = (unsigned char*) SHARED_ONCHIP_BASE;
-    
-    int short size_x= *gray++;
-    int short size_y = *gray++;
-    int short max_col= *gray++;
-   // unsigned char;
-   //unsigned char* L = *gray;
-   unsigned char Y[y][x];
-       Y[y][x]= (*gray++);
-    //*Y=gray;
-    for(y = 0; y < size_y; y++)
-	    for(x = 0; x < size_x; x++)
-	    {
-	         //*L = 0.3125 * *gray++ + 0.5625 * *gray++ + 0.125 * *gray++;
-            //gray = (unsigned char*) SHARED_ONCHIP_BASE;
-            //R [0][0] = (Y[0][0]+Y[0][1]+Y[1][0]+Y[1][1])/4;
-            //*Y[y][x]= *L;
-            *gray++ = ((Y[y][x]) + (Y[y][x+1]) + (Y[y+1][x]) + (Y[y+1][x+1]))/4;
-            //printf(" size %d\n ",Y[y][x]);
-            
-        }*/
-       /* printf("\n");
-        *(SHARED_ONCHIP_BASE) = *SHARED_ONCHIP_BASE)/2;
-        
-        *(SHARED_ONCHIP_BASE+1)= *(SHARED_ONCHIP_BASE+1)/2;*/
    int x ,y; //Henry
     unsigned char*  gray = (unsigned char*) SHARED_ONCHIP_BASE;
     int size_x= *gray++;
     int size_y = *gray++;
-    int max_col = *gray++;
+    gray++;
     unsigned char* resize_imaged ;
     resize_imaged = gray;
     
-    for(y = 0; y < size_y /2 ; y++)
-        for( x = 0; x < size_x / 2; x++){
-            *resize_imaged++ = ( *gray + *(gray + 1) + *(gray + size_x * sizeof(unsigned char)) //
-            + *(gray + size_x * (sizeof(unsigned char)) + 1) ) / 4 ;
-            //printf("%d\n", *resize_imaged);
+     size_x = size_x >> 1;
+    size_y = size_y >> 1;
+    
+    for(y = 0; y < size_y  ; y++)
+        for( x = 0; x < size_x; x++){
+            *resize_imaged++ = ( *gray + *(gray + 1) + *(gray + size_x)  + *(gray + size_x  + 1) ) / 4 ;
             gray = gray + 2;
         }
 }
@@ -142,45 +107,35 @@ void edge_detection()
     int x ,y;
     unsigned char*  pixel_pointer = (unsigned char*) SHARED_ONCHIP_BASE;
 
-    // The picture is now half sized (shouldnt divide the pointer)
-   /* int size_x= (*pixel_pointer++)/2;
-    int size_y = (*pixel_pointer++)/2;
-    int max_col = *pixel_pointer++;*/
+ 
     
     int size_x= (*pixel_pointer++);
     int size_y = (*pixel_pointer++);
-    int max_col =( *pixel_pointer++);
+    pixel_pointer++;
+    
+    size_x = size_x >> 1;
+    size_y = size_y >> 1;
     
     // we put the data at the end of the old so no overwriting
-    unsigned char* edge_value = (unsigned char*) ( pixel_pointer + ((size_x)/2) * ((size_y)/2) );    
+    unsigned char* edge_value = (unsigned char*) ( pixel_pointer + ((size_x)) * ((size_y)) );    
     /* kernels */
-    int X[3][3] = {
-            {-1, 0, 1},
-            {-2, 0, 2},
-            {-1,0, 1}
-        };
-            
-    int Y[3][3] = {
-            {-1, -2, -1},
-            {0, 0, 0},
-            {1, 2, 1}
-        };
+    
         
-        
-    for( y = 0; y < size_y/2; y++)
-        for( x = 0; x < size_x/2; x++){
+    int tmp_x;
+    int tmp_y; 
+    for( y = 0; y < size_y - 2; y++)
+        for( x = 0; x < size_x - 2; x++){
             // apply the sobel operator on each pixel
-            int tmp_x = (X[0][0] * (*pixel_pointer)) + (X[0][1] * (*(pixel_pointer + 1))) + (X[0][2] * (*(pixel_pointer + 2)))+
-        (X[0][0] * (*(pixel_pointer + size_x/2))) + (X[0][1] * (*(pixel_pointer + 1+ size_x/2))) + (X[0][2] * (*(pixel_pointer + 2 + size_x/2)))+
-(X[0][0] * (*(pixel_pointer + 2 * size_x/2))) + (X[0][1] * (*(pixel_pointer + 1+ 2 * size_x/2))) + (X[0][2] * (*(pixel_pointer + 2 + 2 * size_x/2)));
+            // apply the sobel operator on each pixel
+            tmp_x = (-(*pixel_pointer)) + ((*(pixel_pointer + 2)))+
+            (-2 * (*(pixel_pointer + size_x))) + (2 * (*(pixel_pointer + 2 + size_x)))+
+            (-(*(pixel_pointer + (2*size_x) ) ))  + ((*(pixel_pointer + 2 + (2*size_x))));
             
-            int tmp_y = (Y[0][0] * (*pixel_pointer)) + (Y[0][1] * (*(pixel_pointer + 1))) + (Y[0][2] * (*(pixel_pointer + 2)))+
-        (Y[0][0] * (*(pixel_pointer + size_x/2))) + (Y[0][1] * (*(pixel_pointer + 1+ size_x/2))) + (Y[0][2] * (*(pixel_pointer + 2 + size_x/2)))+
-(Y[0][0] * (*(pixel_pointer + 2 * size_x/2))) + (Y[0][1] * (*(pixel_pointer + 1+ 2 * size_x/2))) + (Y[0][2] * (*(pixel_pointer + 2 + 2 * size_x/2)));
+            tmp_y = (-(*pixel_pointer)) + (-2 * (*(pixel_pointer + 1))) + (-(*(pixel_pointer + 2)))+
+            ((*(pixel_pointer + 2 * size_x))) + (2 * (*(pixel_pointer + 1+ 2 * size_x))) +  *(pixel_pointer + 2 + (2*size_x) );
 
-            int tmp = tmp_x * tmp_x + tmp_y * tmp_y ;
-            *edge_value = sqrtImproved(tmp);
-            edge_value++;
+            *edge_value++ = sqrtImproved(tmp_x * tmp_x + tmp_y * tmp_y );
+            //edge_value++;
             pixel_pointer++;
         }
      
@@ -207,40 +162,23 @@ void image_to_ascii(){
     // The picture is now half sized
     int size_x= (*pixel_pointer++);
     int size_y = (*pixel_pointer++);
-    int max_col = *pixel_pointer++;
+    pixel_pointer++;
     unsigned char* toshared;
-    toshared= pixel_pointer;
-    // the new data are after the old data
-    //pixel_pointer += size_x * size_y ; 
+    toshared = pixel_pointer;
+    size_x = size_x >> 1;
+    size_y = size_y >> 1;
     //char symbols[] = {' ','-','.','_', ':', '=', '+','*', 'i','x','#','$','g','&','%','@' };
-  char symbols[] =  {'@','%','&','g','$','#','x','i','*','+', '=', ':', '_', '.', '-',' ' };
+    char symbols[] =  {'@','%','&','m','$','o','x','i','*','+', '=', ':', '_', '.', '-',' ' };
     
             
     for( y = 0; y < size_y; y++){
         for( x = 0; x < size_x; x++){
             char symbol = '\0';
-          // char  symbol;
-           // if( *pixel_pointer++ == 0){
-                // symbol = '_';
-           // }
-            //else {
-                //double red = 0.299;
-                //double green = 0.587;
-                //double blue = 0.114;
-                /*double greyShade = *pixel_pointer++ * 0.299 +
-                                    *pixel_pointer++ * 0.587 +
-                                    *pixel_pointer++ * 0.114;*/
                 int saturation = (int) ( ( (*pixel_pointer++)/255.0 )* 15 );
                 symbol = symbols[saturation];
                 *toshared++ = symbol;  
-              // symbol = symbols[*pixel_pointer++];
-               //pixel_pointer++;
-            //}
-           // printf("%c",symbol);
         }
         
-        //line finshed
-       // printf("\n");
     }
 }
 void writeback()
@@ -251,15 +189,16 @@ void writeback()
     // The picture is now half sized
     int size_x= (*pixel_pointer++);
     int size_y = (*pixel_pointer++);
-    int max_col = *pixel_pointer++;
-
+    pixel_pointer++;
+    size_x = size_x >> 1;
+    size_y = size_y >> 1;
     unsigned char writeback [size_x][size_y];
     for(y = 0; y <size_y; y++){
         for(x = 0; x < size_x; x++){
             writeback[x][y] = *pixel_pointer++;
-         //   printf("%c",writeback[x][y]);
+            printf("%c",writeback[x][y]);
         }
-       // printf("\n");
+        printf("\n");
     }
 
 }
@@ -320,32 +259,10 @@ void task1(void* pdata)
     		PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, SECTION_1);
 		    /* Measurement here */
 		    sram2sm_p3(img_array[current_image]);
-    		    PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_1);
-    		
-		        	//	PERF_RESET(PERFORMANCE_COUNTER_0_BASE);
-
-    		//PERF_START_MEASURING (PERFORMANCE_COUNTER_0_BASE);
-    		PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, SECTION_1);
 		    graycolor();
-		    PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_1); 
-		    /*    		PERF_RESET(PERFORMANCE_COUNTER_0_BASE);
-    		PERF_START_MEASURING (PERFORMANCE_COUNTER_0_BASE);*/
-    		PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, SECTION_2);
 	        resize();
-    	    PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_2);
-    	        	/*	PERF_RESET(PERFORMANCE_COUNTER_0_BASE);
-    		PERF_START_MEASURING (PERFORMANCE_COUNTER_0_BASE); */
-    		PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, SECTION_3);
 	        edge_detection();	
-		    PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_3); 
-		        	/*	PERF_RESET(PERFORMANCE_COUNTER_0_BASE);
-    		PERF_START_MEASURING (PERFORMANCE_COUNTER_0_BASE);*/
-    		PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, SECTION_4);
             image_to_ascii();
-		    PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_4); 
-		        		/*PERF_RESET(PERFORMANCE_COUNTER_0_BASE);
-    		PERF_START_MEASURING (PERFORMANCE_COUNTER_0_BASE);*/
-    		PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, SECTION_5);
             writeback();
     	    PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_5); 
             
@@ -354,12 +271,8 @@ void task1(void* pdata)
 		    perf_print_formatted_report
 		    (PERFORMANCE_COUNTER_0_BASE,            
 		    ALT_CPU_FREQ,        // defined in "system.h"
-		    5,                   // How many sections to print
-		    "Section 1",
-	        "section 2",
-	        "Section 3",
-	        "Section 4",
-	        "Section 5"        // Display-name of section(s).
+		    1,                   // How many sections to print
+		    "Section 1"
 		    );   
 
 		   	
