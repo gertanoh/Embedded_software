@@ -20,7 +20,10 @@ nios2-bsp ucosii $BSP_DIR/${BSP} $CORE_DIR/$SOPCINFO.sopcinfo \
       --set hal.make.bsp_cflags_debug -g \
       --set hal.make.bsp_cflags_optimization -Os \
       --set hal.enable_sopc_sysid_check 1 \
-      --set ucosii.os_tmr_en 1
+      --set ucosii.os_tmr_en 1\
+      --set hal.max_file_descriptors 4 \
+	  --set hal.enable_sim_optimize   0\
+	  --set hal.enable_clean_exit     0
 
 echo " "
 echo "BSP package creation finished"

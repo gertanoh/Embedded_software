@@ -5,7 +5,7 @@
 #   - compiles the application and generates an executable 
 #   - downloads the hardware to the board
 #   - starts a terminal window
-#   - downloads the software and starts the application
+#   - downloads the software and stasrts the application
 # 
 # Start the script with sh ./run_hello_mpsoc.sh
 
@@ -20,7 +20,7 @@ CORE_DIR=../../hardware/de2_nios2_mpsoc
 SOPCINFO=nios2_mpsoc
 SOF=de2_nios2_mpsoc
 CPU=cpu_
-NODES=2
+NODES=5
 
 
 if [[ `md5sum $CORE_DIR/$SOPCINFO.*` == `cat $CORE_DIR/.update.md5` ]] && [[ `md5sum $(basename $0)` == `cat .run.md5` ]]; then 
@@ -46,6 +46,7 @@ if [ ! -d $BSP_DIR/${BSP}_0 ] || [ "$REMAKE_BSP" = true ]; then
 		  --cpu-name ${CPU}0 \
 		  --set hal.make.bsp_cflags_debug -g \
 		  --set hal.make.bsp_cflags_optimization -Os \
+		  --set hal.make.bsp_cflags_optimization -O3 \
 		  --set hal.enable_small_c_library 1 \
 		  --set hal.enable_reduced_device_drivers 1 \
 		  --set hal.enable_lightweight_device_driver_api 1 \

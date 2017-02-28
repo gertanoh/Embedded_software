@@ -1,167 +1,198 @@
+
 #include <stdio.h>
 #include "system.h"
-#include "altera_avalon_mutex.h"
+
+#define DEBUG 1
+#define SIZE_X 32
+#define SIZE_Y 32
+#define SECTION_1 1
+#define PICTURE_OFFSET 12
+#define READ_OFFSET 1040
+
+#define SIZE_X_Q 8
+#define SIZE_Y_Q 8
 
 
-#define TRUE 1
-extern void delay (int millisec);
 
-unsigned char sqrtImproved(int x);
-/*
-void graycolor ()
+
+/* set sof
+ * flags for synchronisation 
+ */
+volatile unsigned char* flag_finish_sram = (unsigned char*)SHARED_ONCHIP_BASE;
+ 
+volatile unsigned char* flag_finish_sobel_3 = (unsigned char*)(SHARED_ONCHIP_BASE+3);
+
+volatile unsigned char* flag_finish_interpolation_1 = (unsigned char*)(SHARED_ONCHIP_BASE+5);
+volatile unsigned char* flag_finish_interpolation_2 = (unsigned char*)(SHARED_ONCHIP_BASE+6);
+volatile unsigned char* flag_finish_interpolation_3 = (unsigned char*)(SHARED_ONCHIP_BASE+7);
+volatile unsigned char* flag_finish_interpolation_4 = (unsigned char*)(SHARED_ONCHIP_BASE+8);
+
+volatile unsigned char* flag_finish_read_3 = (unsigned char*)(SHARED_ONCHIP_BASE+11);
+
+unsigned char input_matrix[16][16];
+unsigned char output_matrix[9][9];
+unsigned char output_matrix_final[7][7];
+unsigned char edge_right[1][8];
+int shared[12][16];
+
+void shared2_chip()
 {
-    int x ,y;
-    unsigned char*  gray = (unsigned char*) SHARED_ONCHIP_BASE;
-    int size_x= *gray++;
-    int size_y = *gray++;
-    gray++;
-    //cpu_3 works on a quarter of the memory from 0 to x/2 and 0 to y/2
-    gray += (size_y>>1)*size_x;
-    size_x = size_x >> 1;
-    size_y = size_y >> 1;
-    unsigned char* alpha = (unsigned char*) SHARED_ONCHIP_BASE;
-    double L ;
-    alpha= gray;
-    double red = 0.3125;
-    double green = 0.5625;
-    double blue = 0.125;
-    for(y = 0; y < size_y; y++)
-	    for(x = 0; x < size_x; x++)
-	    {
-	        L = red * *gray++ + green * *gray++ + blue * *gray++;
-	        *alpha++ = L;
-        }
+	int x, y;
+	int* base = (int*)(SHARED_ONCHIP_BASE+PICTURE_OFFSET);
+	//converting image to gray scale
+	// write 4 bytes to the shared memory
+	/* we use the avalon bus size to write 4 bytes in one shot
+	* calculation of offset in order to get the right up 12 * 12
+	*/
+	unsigned char size_x_off = (SIZE_X * 3) >> 3;
+	unsigned char size_y_off =  (SIZE_Y )>> 1 ;
+	
+	/* offset for cpu_3 to get the right down quarter */
+	base += ((size_x_off<<1) * size_y_off);
+	for(y = 0; y < size_y_off ; y++){
+	    for(x = 0; x < size_x_off  ; x++){
+		    shared[x][y]= *(base++);
+	    }
+	    base += size_x_off;
+	}
+
 }
-*/
-/*
-void resize()
+
+
+void grayscale(){
+    int x, y;
+    /* backward of the pointer in order to read */
+    unsigned char* gray ;
+    gray = shared; 
+    int temp = 0;
+    
+	for(y = 0; y < 16; y++)
+	    {
+	    for(x = 0; x < 16; x++)
+	    {
+	        temp = (*gray)<<2; // R
+	        temp += *gray++; // R
+	        temp += (*gray)<<3; // G
+	        temp += *gray++; // G
+	        temp = temp >> 4;
+	        temp += (*gray++)>> 3; //B
+		    input_matrix[x][y] = temp;
+	    }
+	}
+}
+void interpolation()
 {
-   int x ,y; //Henry
-    unsigned char*  gray = (unsigned char*) SHARED_ONCHIP_BASE;
-    int size_x= *gray++;
-    int size_y = *gray++;
-    gray++;
-    //cpu_2 works on a quarter of the memory from x/2 to x and y/2 to y
-    gray += (size_y>>1)*size_x;
-    size_x = size_x >> 1;
-    size_y = size_y >> 1;
-    unsigned char* resize_imaged ;
-    resize_imaged = gray;
-    
-    size_x = size_x >> 1;
-    size_y = size_y >> 1;
-    
-    for(y = 0; y < size_y  ; y++)
-        for( x = 0; x < size_x; x++){
-            *resize_imaged++ = ( *gray + *(gray + 1) + *(gray + size_x)  + *(gray + size_x  + 1) ) / 4 ;
-            gray = gray + 2;
+	int x, y;
+    int i, j;
+	for(y = 0, j = 0; y < 15; y+=2,j++){
+	    for(x = 0, i = 0; x < 15; x+=2, i++){
+	    	   output_matrix[i][j] = (input_matrix[x][y] +input_matrix[x+1][y]
+	    	   +input_matrix[x][y+1] + input_matrix[x+1][y+1] ) >> 2;
+	    }
+	}
+}
+
+
+void write_back_to_shared(){
+
+    int* base = (int*)(SHARED_ONCHIP_BASE+READ_OFFSET);
+    unsigned char size_x_off = 8;
+	unsigned char size_y_off = 8 ;
+	base += size_x_off * size_y_off;
+	for(y = 0; y < size_y_off ; y++){
+	    for(x = 0; x < size_x_off  ; x++){
+		    *base++ = output_matrix[x][y];
+	    }
+	    base += size_x_off;
+	}
+}void get_edge_right(){
+        
+    unsigned char* base = (unsigned*)(SHARED_ONCHIP_BASE+READ_OFFSET);
+    /*position at the right upper */
+    base += 16*8 + 8;
+    int i = 0, j = 0;
+    for(j= 0; j <8; j++){
+        for(i = 0; i < 1; i++){
+            edge_right[i][j] = *base ;
         }
-}*/
+        base += 16;
+    }
+}
+        
+    
 void edge_detection()
 {
-    int x ,y;
-    unsigned char*  pixel_pointer = (unsigned char*) SHARED_ONCHIP_BASE;
-
- 
-    
-    int size_x= (*pixel_pointer++);
-    int size_y = (*pixel_pointer++);
-    pixel_pointer++;
-    
-    size_x = size_x >> 1;
-    size_y = size_y >> 1;
-     /*cpu_2 works on a quarter of the memory from x/2 to x and y/2 to y*/
-    pixel_pointer += (size_y>>1)*size_x;
-    size_x = size_x >> 1;
-    size_y = size_y >> 1;
-    // we put the data at the end of the old so no overwriting
-    unsigned char* edge_value = (unsigned char*) ( pixel_pointer + ((size_x)) * ((size_y)) );    
-    /* kernels */
-    
-        
-    int tmp_x;
-    int tmp_y; 
-    for( y = 0; y < size_y - 2; y++)
-        for( x = 0; x < size_x - 2; x++){
-            // apply the sobel operator on each pixel
-            tmp_x = (-(*pixel_pointer)) + ((*(pixel_pointer + 2)))+
-            (-2 * (*(pixel_pointer + size_x))) + (2 * (*(pixel_pointer + 2 + size_x)))+
-            (-(*(pixel_pointer + (2*size_x) ) ))  + ((*(pixel_pointer + 2 + (2*size_x))));
-            
-            tmp_y = (-(*pixel_pointer)) + (-2 * (*(pixel_pointer + 1))) + (-(*(pixel_pointer + 2)))+
-            ((*(pixel_pointer + 2 * size_x))) + (2 * (*(pixel_pointer + 1+ 2 * size_x))) +  *(pixel_pointer + 2 + (2*size_x) );
-
-            *edge_value++ = sqrtImproved(tmp_x * tmp_x + tmp_y * tmp_y );
-            //edge_value++;
-            pixel_pointer++;
+	int x, y;
+	int gx[7][7];
+	int gy[7][7];
+	
+	
+	/* add edge for element in x > 5 and y > 5 */
+	int i = 0, j = 0;
+	for(y = 0, j = 0; y < 7; y++, j++){
+	    for(x = 8, i = 0; x < 9; x++, i++){
+	        output_matrix[x][y] = edge_right[i][j];
         }
-     
-     
-}     
-unsigned char sqrtImproved(int x){
-
-    /*use of unsigned char because max color is 255 */
-    /* square root function */
-    double rt = 1, ort = 0;
-    while(ort != rt){
-        ort = rt;
-        rt = ((x/rt) + rt ) / 2;
     }
-    
-    return (unsigned char) rt;
+	
+	for(y = 1; y < SIZE_Y_Q; y++){
+	    for(x = 1; x < SIZE_X_Q; x++){
+	        gx[x-1][y-1] = (-output_matrix[x-1][y-1] + output_matrix[x-1][y+1]) 
+	            + ( -(output_matrix[x][y-1]<<1) +(output_matrix[x][y+1]<<1) ) + 
+	        ( -output_matrix[x+1][y-1] +output_matrix[x+1][y+1] );
+		
+	        gy[x-1][y-1] = (output_matrix[x-1][y-1] + (output_matrix[x-1][y]<<1) + output_matrix[x-1][y+1] )+
+	                        (-(output_matrix[x+1][y-1]) -  (output_matrix[x+1][y]<<1) -output_matrix[x+1][y+1] );
+            
+	       if(gx[x-1][y-1]< 0) gx[x-1][y-1]= -gx[x-1][y-1];
+   	       if(gy[x-1][y-1]< 0) gy[x-1][y-1]= -gy[x-1][y-1];
+   	        output_matrix_final[x-1][y-1] = ascii_art(gx[x-1][y-1] + gy[x-1][y-1]);
+	    }
+	}
+	
+	
 }
 
-void image_to_ascii(){
-    
-    int x ,y;  
-    unsigned char*  pixel_pointer = (unsigned char*) SHARED_ONCHIP_BASE;
+void write_back_shared(){
 
-    // The picture is now half sized
-    int size_x= (*pixel_pointer++);
-    int size_y = (*pixel_pointer++);
-    pixel_pointer++;
-    /*cpu_2 works on a quarter of the memory from x/2 to x and y/2 to y*/
-    pixel_pointer += size_x * (size_y>>1);
-    size_x = size_x >> 1;
-    size_y = size_y >> 1;
-    
-    /* mnew size of the pciture */
-    size_x = size_x >> 1;
-    size_y = size_y >> 1;
-    
-    unsigned char* toshared;
-    toshared = pixel_pointer;
-    //char symbols[] = {' ','-','.','_', ':', '=', '+','*', 'i','x','#','$','g','&','%','@' };
-    char symbols[] =  {'@','%','&','m','$','o','x','i','*','+', '=', ':', '_', '.', '-',' ' };
-    
-            
-    for( y = 0; y < size_y; y++){
-        for( x = 0; x < size_x; x++){
-            char symbol = '\0';
-                int saturation = (int) ( ( (*pixel_pointer++)/255.0 )* 15 );
-                symbol = symbols[saturation];
-                *toshared++ = symbol;  
-        }
-        
-    }
+    unsigned* base = (unsigned*)(SHARED_ONCHIP_BASE+READ_OFFSET);
+    unsigned char size_x_off = 8;
+	unsigned char size_y_off = 8 ;
+	base += 16 * 8;
+	for(y = 0; y < size_y_off -1 ; y++){
+	    for(x = 0; x < size_x_off -1 ; x++){
+		    *base++ = output_matrix_final[x][y];
+	    }
+	    base += size_x_off;
+	}
 }
 int main(void) {
-
-
-	alt_mutex_dev* mutex_2 = altera_avalon_mutex_open(MUTEX_2_NAME);
-	while (1) {
-	    delay(2);
-        altera_avalon_mutex_lock(mutex_2,1);
-	    //graycolor();
-        //resize();
-       // edge_detection();	
-        image_to_ascii();
-        altera_avalon_mutex_unlock(mutex_2);
-        //printf("unlock 2\n");
-                
-        /*small sleep to enable the cpu 0 to work */
-            
-      } 
-     
+   
+   int i = 0;
+   while(i++ < 5){
+   
+        /* wait fora picture to be in shared */
+        while(!(*flag_finish_sram == 1));
+        /*first reset flag */
+        printf("read to chip ");
+        shared2_chip();
+        /* set flag finsih reading */
+        *flag_finish_read_3 = 1;
+        grayscale();
+        printf("gray\n");
+        interpolation();
+        printf("inter\n");
+        printf("write back to shared \n");
+        write_back_to_shared();
+        /* set flag finish inter*/
+        *flag_finish_interpolation_3 = 1;
+        /* wait for everyone to put picture back */
+        while(!( *flag_finish_interpolation_2 == 1 && *flag_finish_interpolation_1 == 1 && *flag_finish_interpolation_4 == 1 ));
+        printf("Get the edge \n");
+        printf("SObel \n");
+        /* set flag finish sobel */
+        *flag_finish_sobel_3 = 1;
+   
+   }
   return 0;
 }
