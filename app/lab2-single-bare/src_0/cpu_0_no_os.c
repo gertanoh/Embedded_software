@@ -13,7 +13,7 @@
 #include "images.h"
 #include "io.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 #define SECTION_1 1
 
@@ -164,16 +164,16 @@ void edge_detection()
 		
 	        gy[x-1][y-1] = (input_matrix[x-1][y-1] + (input_matrix[x-1][y]<<1) + input_matrix[x-1][y+1] )+
 	                        (-(input_matrix[x+1][y-1]) -  (input_matrix[x+1][y]<<1) -input_matrix[x+1][y+1] );
-	                        gx[x-1][y-1] = (-input_matrix[x-1][y-1] + v[x-1][y+1]) 
+	                        /*gx[x-1][y-1] = (-input_matrix[x-1][y-1] + v[x-1][y+1]) 
 	            + ( -(input_matrix[x][y-1]<<1) +(input_matrix[x][y+1]<<1) ) + 
-	        ( -input_matrix[x+1][y-1] +input_matrix[x+1][y+1] );
+	        ( -input_matrix[x+1][y-1] +input_matrix[x+1][y+1] );*/
 		
 	       /* gy[x-1][y-1] = (input_matrix[x-1][y-1] + (input_matrix[x-1][y]<<1) + input_matrix[x-1][y+1] )+
 	                        (-(input_matrix[x+1][y-1]) -  (input_matrix[x+1][y]<<1) -input_matrix[x+1][y+1] );*/
             
-	       if(gx[x-1][y-1]< 0) gx[x-1][y-1]= -gx[x-1][y-1];
-   	       if(gy[x-1][y-1]< 0) gy[x-1][y-1]= -gy[x-1][y-1];
-   	        output_matrix[x-1][y-1] = ascii_art(gx[x-1][y-1] + gy[x-1][y-1]);
+	       //if(gx[x-1][y-1]< 0) gx[x-1][y-1]= -gx[x-1][y-1];
+   	      // if(gy[x-1][y-1]< 0) gy[x-1][y-1]= -gy[x-1][y-1];
+   	        output_matrix[x-1][y-1] = ascii_art(gx[x-1][y-1]*gx[x-1][y-1] + gy[x-1][y-1]*gy[x-1][y-1]);
 	    }
 	}
 	shared = (unsigned char*) SHARED_ONCHIP_BASE;
@@ -261,12 +261,12 @@ void write_sram(unsigned char *base){
 		{
 			*base = *shared++;
 			#if DEBUG == 1
-			//printf("%c",*base);	
+			printf("%c",*base);	
 			#endif
 			base++;
 		}
 		#if DEBUG == 1
-	    //printf("\n");
+	    printf("\n");
 		#endif
 	}
 }
@@ -300,9 +300,9 @@ unsigned char j = *(img_array[current_image]+1);
    /* Measurement here */
     sram2sm_p3(img_array[current_image]);
     grayscale();
-    //interpolation();
-    //edge_detection();
-   // write_sram(out);            
+    interpolation();
+    edge_detection();
+    write_sram(out);            
             
    PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_1); 
    /* Print report */
