@@ -158,18 +158,18 @@ void edge_detection()
 	
 	for(y = 1; y < size_y-1; y++){
 	    for(x = 1; x < size_x-1; x++){
-	       /* gx[x-1][y-1] = (-input_matrix[x-1][y-1] + input_matrix[x-1][y+1]) 
+	        gx[x-1][y-1] = (-input_matrix[x-1][y-1] + input_matrix[x-1][y+1]) 
 	            + ( -(input_matrix[x][y-1]<<1) +(input_matrix[x][y+1]<<1) ) + 
 	        ( -input_matrix[x+1][y-1] +input_matrix[x+1][y+1] );
 		
 	        gy[x-1][y-1] = (input_matrix[x-1][y-1] + (input_matrix[x-1][y]<<1) + input_matrix[x-1][y+1] )+
-	                        (-(input_matrix[x+1][y-1]) -  (input_matrix[x+1][y]<<1) -input_matrix[x+1][y+1] );*/
-	                        gx[x-1][y-1] = (-output_matrix[x-1][y-1] + output_matrix[x-1][y+1]) 
-	            + ( -(output_matrix[x][y-1]<<1) +(output_matrix[x][y+1]<<1) ) + 
-	        ( -output_matrix[x+1][y-1] +output_matrix[x+1][y+1] );
+	                        (-(input_matrix[x+1][y-1]) -  (input_matrix[x+1][y]<<1) -input_matrix[x+1][y+1] );
+	                        gx[x-1][y-1] = (-input_matrix[x-1][y-1] + v[x-1][y+1]) 
+	            + ( -(input_matrix[x][y-1]<<1) +(input_matrix[x][y+1]<<1) ) + 
+	        ( -input_matrix[x+1][y-1] +input_matrix[x+1][y+1] );
 		
-	        gy[x-1][y-1] = (output_matrix[x-1][y-1] + (output_matrix[x-1][y]<<1) + output_matrix[x-1][y+1] )+
-	                        (-(output_matrix[x+1][y-1]) -  (output_matrix[x+1][y]<<1) -output_matrix[x+1][y+1] );
+	       /* gy[x-1][y-1] = (input_matrix[x-1][y-1] + (input_matrix[x-1][y]<<1) + input_matrix[x-1][y+1] )+
+	                        (-(input_matrix[x+1][y-1]) -  (input_matrix[x+1][y]<<1) -input_matrix[x+1][y+1] );*/
             
 	       if(gx[x-1][y-1]< 0) gx[x-1][y-1]= -gx[x-1][y-1];
    	       if(gy[x-1][y-1]< 0) gy[x-1][y-1]= -gy[x-1][y-1];
@@ -300,9 +300,9 @@ unsigned char j = *(img_array[current_image]+1);
    /* Measurement here */
     sram2sm_p3(img_array[current_image]);
     grayscale();
-    interpolation();
-    edge_detection();
-    write_sram(out);            
+    //interpolation();
+    //edge_detection();
+   // write_sram(out);            
             
    PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_1); 
    /* Print report */

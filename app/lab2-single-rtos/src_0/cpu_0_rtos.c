@@ -208,21 +208,21 @@ void edge_detection()
 	
 	for(y = 1; y < size_y-1; y++){
 	    for(x = 1; x < size_x-1; x++){
-	       /* gx[x-1][y-1] = (-input_matrix[x-1][y-1] + input_matrix[x-1][y+1]) 
+	        gx[x-1][y-1] = (-input_matrix[x-1][y-1] + input_matrix[x-1][y+1]) 
 	            + ( -(input_matrix[x][y-1]<<1) +(input_matrix[x][y+1]<<1) ) + 
 	        ( -input_matrix[x+1][y-1] +input_matrix[x+1][y+1] );
 		
 	        gy[x-1][y-1] = (input_matrix[x-1][y-1] + (input_matrix[x-1][y]<<1) + input_matrix[x-1][y+1] )+
-	                        (-(input_matrix[x+1][y-1]) -  (input_matrix[x+1][y]<<1) -input_matrix[x+1][y+1] );*/
-	                        gx[x-1][y-1] = (-output_matrix[x-1][y-1] + output_matrix[x-1][y+1]) 
-	            + ( -(output_matrix[x][y-1]<<1) +(output_matrix[x][y+1]<<1) ) + 
-	        ( -output_matrix[x+1][y-1] +output_matrix[x+1][y+1] );
+	                        (-(input_matrix[x+1][y-1]) -  (input_matrix[x+1][y]<<1) -input_matrix[x+1][y+1] );
+	                        gx[x-1][y-1] = (-input_matrix[x-1][y-1] + input_matrix[x-1][y+1]) 
+	            + ( -(input_matrix[x][y-1]<<1) +(input_matrix[x][y+1]<<1) ) + 
+	        ( -input_matrix[x+1][y-1] +input_matrix[x+1][y+1] );
 		
-	        gy[x-1][y-1] = (output_matrix[x-1][y-1] + (output_matrix[x-1][y]<<1) + output_matrix[x-1][y+1] )+
-	                        (-(output_matrix[x+1][y-1]) -  (output_matrix[x+1][y]<<1) -output_matrix[x+1][y+1] );
+	        /*gy[x-1][y-1] = (input_matrix[x-1][y-1] + (input_matrix[x-1][y]<<1) + input_matrix[x-1][y+1] )+
+	                        (-(input_matrix[x+1][y-1]) -  (input_matrix[x+1][y]<<1) -input_matrix[x+1][y+1] );*/
             
-	       if(gx[x-1][y-1]< 0) gx[x-1][y-1]= -gx[x-1][y-1];
-   	       if(gy[x-1][y-1]< 0) gy[x-1][y-1]= -gy[x-1][y-1];
+	       //if(gx[x-1][y-1]< 0) gx[x-1][y-1]= -gx[x-1][y-1];
+   	       //if(gy[x-1][y-1]< 0) gy[x-1][y-1]= -gy[x-1][y-1];
    	        output_matrix[x-1][y-1] = ascii_art(gx[x-1][y-1] + gy[x-1][y-1]);
 	    }
 	}
