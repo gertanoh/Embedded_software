@@ -17,16 +17,18 @@
 /* set sof
  * flags for synchronisation 
  */
-volatile unsigned char* flag_finish_sram = (unsigned char*)SHARED_ONCHIP_BASE;
+
+volatile unsigned char* flag_finish_sram = (volatile unsigned char*)SHARED_ONCHIP_BASE;
+
  
-volatile unsigned char* flag_finish_sobel_4 = (unsigned char*)(SHARED_ONCHIP_BASE+4);
+volatile unsigned char*  flag_finish_sobel_4 = (volatile unsigned char*)(SHARED_ONCHIP_BASE+4);
 
-volatile unsigned char* flag_finish_interpolation_1 = (unsigned char*)(SHARED_ONCHIP_BASE+5);
-volatile unsigned char* flag_finish_interpolation_2 = (unsigned char*)(SHARED_ONCHIP_BASE+6);
-volatile unsigned char* flag_finish_interpolation_3 = (unsigned char*)(SHARED_ONCHIP_BASE+7);
-volatile unsigned char* flag_finish_interpolation_4 = (unsigned char*)(SHARED_ONCHIP_BASE+8);
+volatile unsigned char*  flag_finish_interpolation_1 = (volatile unsigned char*)(SHARED_ONCHIP_BASE+5);
+volatile unsigned char*  flag_finish_interpolation_2 =(volatile unsigned char*)(SHARED_ONCHIP_BASE+6);
+volatile unsigned char*  flag_finish_interpolation_3 = (volatile unsigned char*)(SHARED_ONCHIP_BASE+7);
+volatile unsigned char*  flag_finish_interpolation_4 = (volatile unsigned char*)(SHARED_ONCHIP_BASE+8);
 
-volatile unsigned char* flag_finish_read_4 = (unsigned char*)(SHARED_ONCHIP_BASE+12);
+volatile unsigned char*  flag_finish_read_4 = (volatile unsigned char*)(SHARED_ONCHIP_BASE+12);
 
 
 unsigned char input_matrix[16][16];
@@ -98,7 +100,7 @@ void write_back_to_shared(){
 
     int x, y ;
     int* base = (int*)(SHARED_ONCHIP_BASE+READ_OFFSET);
-    unsigned char size_x_off = 8;
+    unsigned char size_x_off = 2;
 	unsigned char size_y_off = 8 ;
 	base += size_x_off * size_y_off;
 	base += size_x_off;
@@ -106,7 +108,7 @@ void write_back_to_shared(){
 	    for(x = 0; x < size_x_off  ; x++){
 		   *base++ = output_matrix[x][y];
 	    }
-	    base += size_x_off;
+	    base += 2;
 	}
 }
 void get_edge(){
@@ -147,43 +149,43 @@ unsigned char ascii_art(int value)
         symbol = '.';
     }
     else if (value <= 15129){
-        symbol = ':';
+        symbol = ';';
     }
     else if (value <= 26896){
-        symbol = '=';
-    }
-    else if (value <= 42025){
-        symbol = '+';
-    }
-    else if (value <= 60516){
         symbol = '*';
     }
+    else if (value <= 42025){
+        symbol = 's';
+    }
+    else if (value <= 60516){
+        symbol = 't';
+    }
     else if (value <= 82369){
-        symbol = 'c';
+        symbol = 'I';
     }
     else if (value <= 107584){
-        symbol = 'i';
+        symbol = '(';
     }
     else if (value <= 136161){
-        symbol = 'x';
+        symbol = 'j';
     }
     else if (value <= 168100){
-        symbol = 'e';
+        symbol = 'u';
     }
     else if (value <= 203401){
-        symbol = 'o';
+        symbol = 'V';
     }
     else if (value <= 242064){
-        symbol = '&';
+        symbol = 'w';
     }
     else if (value <= 284089){
-        symbol = '8';
+        symbol = 'b';
     }
     else if (value <= 329476){
-        symbol = '#';
+        symbol = 'R';
     }
     else if (value <= 378225){
-        symbol = '%';
+        symbol = 'g';
     }
     else if (value > 378225) {
         symbol = '@';
@@ -225,7 +227,7 @@ void edge_detection()
 		
 	        gy[x-1][y-1] = (output_matrix[x-1][y-1] + (output_matrix[x-1][y]<<1) + output_matrix[x-1][y+1] )+
 	                        (-(output_matrix[x+1][y-1]) -  (output_matrix[x+1][y]<<1) -output_matrix[x+1][y+1] );
-            
+                
 	       //if(gx[x-1][y-1]< 0) gx[x-1][y-1]= -gx[x-1][y-1];
    	      // if(gy[x-1][y-1]< 0) gy[x-1][y-1]= -gy[x-1][y-1];
    	        output_matrix_final[x-1][y-1] = ascii_art(gx[x-1][y-1]*gx[x-1][y-1] + gy[x-1][y-1]*gy[x-1][y-1]);
@@ -234,15 +236,15 @@ void edge_detection()
 	
 	/* write back to shared memory */
 	unsigned char* base = (unsigned char*)(SHARED_ONCHIP_BASE+READ_OFFSET);
-    unsigned char size_x_off = 7;
-	unsigned char size_y_off = 7 ;
+    unsigned char size_x_off = 6;
+	unsigned char size_y_off = 6 ;
 	base += size_x_off * size_y_off;
-	base += size_y_off;
+	base += size_y_off + 1;
 	for(y = 0; y < size_y_off  ; y++){
 	    for(x = 0; x < size_x_off ; x++){
 		    *base++ = output_matrix_final[x][y];
 	    }
-	    base += size_x_off;
+	    base += size_x_off+1;
 	}
 	
 }
@@ -263,30 +265,24 @@ void write_back_shared_final(){
 }*/
 int main(void) {
    
-   mutex_0 = altera_avalon_mutex_open(MUTEX_0_NAME);
    while(1){
    
-        /* wait fora picture to be in shared */
+       /* wait for a picture to be in shared */
+        delay(1);
         while(!(*flag_finish_sram == 1));
-        /*first reset flag */
-       // printf("read to chip ");
         shared2_chip();
-        /* set flag finsih reading */
         *flag_finish_read_4 = 1;
+        *flag_finish_sobel_4 = 0;
+        *flag_finish_interpolation_4 = 0; 
         grayscale();
-       // printf("gray\n");
-       interpolation();
-       // printf("inter\n");
-       write_back_to_shared();
-       // printf("write back to shared \n");
+        interpolation();
+        write_back_to_shared();
         /* set flag finish inter*/
         *flag_finish_interpolation_4 = 1;
         /* wait for everyone to put picture back */
-        while(!( *flag_finish_interpolation_2 == 1 && *flag_finish_interpolation_3 == 1 && *flag_finish_interpolation_1 == 1 ));
-       // printf("Get the edge \n");
-       
+        while(!( *flag_finish_interpolation_1 == 1 && *flag_finish_interpolation_2 == 1 && *flag_finish_interpolation_3 == 1 ));
+        
         get_edge();
-       // printf("SObel \n");
         edge_detection();
         /* set flag finish sobel */
         *flag_finish_sobel_4 = 1;

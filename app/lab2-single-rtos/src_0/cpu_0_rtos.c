@@ -12,9 +12,10 @@
 #include "sys/alt_alarm.h"
 #include "system.h"
 #include "io.h"
-#include "images.h"
+#include "images_alt.h"
 
-#define DEBUG 0
+
+#define DEBUG 1
 
 #define HW_TIMER_PERIOD 100 /* 100ms */
 
@@ -34,7 +35,7 @@ OS_STK    StartTask_Stack[TASK_STACKSIZE];
 #define SECTION_1 1
 
 extern void delay (int millisec);
-
+unsigned char ascii_art(int value);
 
 
 void sram2sm_p3(int* base)
@@ -89,104 +90,37 @@ void grayscale(){
 /*
  * function for interpolating gray scale image 
  */
- /*
+ 
 void interpolation()
 {
-	int x, y;
-	unsigned char* shared;
-	shared = (unsigned char*) SHARED_ONCHIP_BASE;
-	int SIZE_X = *shared++;
-	int SIZE_Y = *shared++;
-	shared++;
-	int new_size = SIZE_X >>1;
-		
-	int  ax= 0, ay = 0;
-	for(y = 0; y < (SIZE_Y-1); y+=2){
-	    ax = 0;
-	    for(x = 0; x < (SIZE_X-1); x+=2){
-	    	    
-		    *(shared+(ay*new_size)+ax) = ( *(shared+(y*SIZE_X)+x)  +  *(shared+(y*SIZE_X)+(x+1) )  
-		                    + *(shared+((y+1)*SIZE_X)+(x) ) + *(shared+((y+1)*SIZE_X)+(x+1) ) )   >> 2;
-		    
-		    ax++;
-	    }
-	    ay++;
-	}
-	shared = (unsigned char*) SHARED_ONCHIP_BASE;
-	*shared++ = SIZE_X >> 1;
-	*shared++ = SIZE_Y >> 1;
-	
-}*/
-void interpolation()
-{
-	int x, y;
-	unsigned char* shared;
-	shared = (unsigned char*) SHARED_ONCHIP_BASE;
-	unsigned char output_matrix [20][20];
-	unsigned char input_matrix [40][40];
-	int size_x = *shared++;
-	int size_y = *shared++;
-	shared++;
-    int i, j;
-	for(y = 0, j = 0; y < (size_y-1); y+=2,j++){
-	    for(x = 0, i = 0; x < (size_x-1); x+=2, i++){
-	    	   output_matrix[i][j] = (input_matrix[x][y] +input_matrix[x+1][y]
-	    	   +input_matrix[x][y+1] + input_matrix[x+1][y+1] ) >> 2;
-	    }
-	}
-	shared = (unsigned char*) SHARED_ONCHIP_BASE;
-	*shared++ = size_x >> 1;
-	*shared++ = size_y >> 1;
-	*shared++ = 225;
-	for(y = 0; y <  size_y >> 1; y++){
-	    for(x = 0; x <  size_x >> 1; x++){
-	        *shared++ = output_matrix[x][y];
+
+	int x ,y; 
+    unsigned char*  gray = (unsigned char*) SHARED_ONCHIP_BASE;
+    int size_x= *gray++;
+    int size_y = *gray++;
+    gray++;
+    unsigned char* resize_imaged ;
+    resize_imaged = gray;
+    
+
+    
+    for(y = 0; y < size_y ; y+=2)
+        for( x = 0; x < size_x; x+=2){
+            *resize_imaged++ = ( *(gray+x) + *(gray + x + 1) + *(gray + (y+1)*size_x+x) 
+            + *(gray + (y+1)*size_x+ x + 1) ) >> 2 ;
         }
-    }
+	
+	//update size 
+    gray = (unsigned char*) SHARED_ONCHIP_BASE;
+	*gray++ = size_x >> 1;
+	*gray++ = size_y >> 1;
 }
+
 
 /*
  * function for edge detection 
  */
- int min = 0, max = 0;
- /*
-void edge_detection()
-{
-	int x, y;
-	unsigned char* shared;
-	int gx,gy;
-	shared = (unsigned char*) SHARED_ONCHIP_BASE;
-	int SIZE_X = *shared++;
-	int SIZE_Y = *shared++;
-	shared++;
 
-	int maxim=0;
-	int i = 0;
-	for(y = 1; y < SIZE_Y-1; y++){
-	    for(x = 1; x < SIZE_X-1; x++){
-	        gx=(-(*(shared+(x-1)+((y-1)*SIZE_X))) + 
-		        (*(shared+(x+1)+((y-1)*SIZE_X))) + 
-		        -( (*(shared+(x-1)+((y)*SIZE_X)))<< 1 ) + 
-		        ( (*(shared+(x+1)+((y)*SIZE_X)))<< 1 ) + 
-		        (-(*(shared+(x-1)+((y+1)*SIZE_X)))) + 
-		        (*(shared+(x+1)+((y+1)*SIZE_X))) );
-		
-	        gy=(-(*(shared+(x-1)+((y-1)*SIZE_X))) + 
-		        -( (*(shared+(x)+((y-1)*SIZE_X))) << 1 ) + 
-		        (-(*(shared+(x+1)+((y-1)*SIZE_X)))) + 
-		        (*(shared+(x-1)+((y+1)*SIZE_X))) + 
-		        ( (*(shared+(x)+((y+1)*SIZE_X))) << 1) + 
-		        (*(shared+(x+1)+((y+1)*SIZE_X)))) ;
-            
-	       
-	        //maxim= (abs(gxval)+abs(gyval) )  ;
-	        maxim = sqrt(gx*gx + gx*gy)*2/11;
-	       
-	        *(shared+(y*SIZE_X)+x) = maxim;
-	    }
-	}
-}
-*/
 void edge_detection()
 {
 	int x, y;
@@ -214,16 +148,8 @@ void edge_detection()
 		
 	        gy[x-1][y-1] = (input_matrix[x-1][y-1] + (input_matrix[x-1][y]<<1) + input_matrix[x-1][y+1] )+
 	                        (-(input_matrix[x+1][y-1]) -  (input_matrix[x+1][y]<<1) -input_matrix[x+1][y+1] );
-	                        gx[x-1][y-1] = (-input_matrix[x-1][y-1] + input_matrix[x-1][y+1]) 
-	            + ( -(input_matrix[x][y-1]<<1) +(input_matrix[x][y+1]<<1) ) + 
-	        ( -input_matrix[x+1][y-1] +input_matrix[x+1][y+1] );
-		
-	        /*gy[x-1][y-1] = (input_matrix[x-1][y-1] + (input_matrix[x-1][y]<<1) + input_matrix[x-1][y+1] )+
-	                        (-(input_matrix[x+1][y-1]) -  (input_matrix[x+1][y]<<1) -input_matrix[x+1][y+1] );*/
             
-	       //if(gx[x-1][y-1]< 0) gx[x-1][y-1]= -gx[x-1][y-1];
-   	       //if(gy[x-1][y-1]< 0) gy[x-1][y-1]= -gy[x-1][y-1];
-   	        output_matrix[x-1][y-1] = ascii_art(gx[x-1][y-1] + gy[x-1][y-1]);
+   	        output_matrix[x-1][y-1] = ascii_art(gx[x-1][y-1]*gx[x-1][y-1] + gy[x-1][y-1]*gy[x-1][y-1]);
 	    }
 	}
 	shared = (unsigned char*) SHARED_ONCHIP_BASE;
@@ -232,31 +158,72 @@ void edge_detection()
 	*shared++ = 255;
 	for(y = 0; y < size_y-2; y++){
 	    for(x = 0; x < size_x-2; x++){
-	        *shared++ = output_matrix[x-1][y-1];
+	        *shared++ = output_matrix[x][y];
         }
     }
 }
 
 
-void ascii_art()
+
+/* new square root function 
+ * we know that the maximun value reached is 437650
+  * sqrt(437650) is 661
+  *  661 / 16 = 41
+  * we map value from 0-41*41 , 42*42 - 123*123
+  */ 
+unsigned char ascii_art(int value)
 {
-	unsigned char* base;
-	//char symbols[16] = { '{','y','w','@', '%','&', '#', 'x','`','_', '+', '=', ':', '-', '.', ' ' };
-    //char symbols[16] =  {'@','%','#','&','m','$','o','x','i','*','+', '=', ':', '.', '-',' ' };
-    char symbols[] = {' ','-','.','_', ':', '=', '+','*', 'i','x','#','$','g','&','%','@' };
-	base = (unsigned char*) SHARED_ONCHIP_BASE;
-    int SIZE_X = *base++;
-    int SIZE_Y = *base++;
-    *base++;
-	int j,y,x;	
-	for(y = 1; y < SIZE_Y-1; y++)
-	{
-		for(x = 1; x < SIZE_X-1; x++)
-		{
-			j= (int) (((*(base+ (y*SIZE_X)+x)) )>>4);
-			*(base++) = symbols[j];
-		}
-	}
+     unsigned char symbol = '\0';
+    if(value <= 1681){
+        symbol = ' ';
+    }
+    else if (value <= 6724){
+        symbol = '.';
+    }
+    else if (value <= 15129){
+        symbol = ';';
+    }
+    else if (value <= 26896){
+        symbol = '*';
+    }
+    else if (value <= 42025){
+        symbol = 's';
+    }
+    else if (value <= 60516){
+        symbol = 't';
+    }
+    else if (value <= 82369){
+        symbol = 'I';
+    }
+    else if (value <= 107584){
+        symbol = '(';
+    }
+    else if (value <= 136161){
+        symbol = 'j';
+    }
+    else if (value <= 168100){
+        symbol = 'u';
+    }
+    else if (value <= 203401){
+        symbol = 'V';
+    }
+    else if (value <= 242064){
+        symbol = 'w';
+    }
+    else if (value <= 284089){
+        symbol = 'b';
+    }
+    else if (value <= 329476){
+        symbol = 'R';
+    }
+    else if (value <= 378225){
+        symbol = 'g';
+    }
+    else if (value > 378225) {
+        symbol = '@';
+    }
+    return symbol;
+   
 }
 void write_sram(unsigned char *base){
     int x, y;
@@ -265,8 +232,8 @@ void write_sram(unsigned char *base){
 	int SIZE_X = *shared++;
 	int SIZE_Y = *shared++;
 	shared++;
-	for(y = 1; y < (SIZE_Y-1); y++){
-		for(x = 1; x < (SIZE_X-1 ); x++)
+	for(y = 0; y < (SIZE_Y); y++){
+		for(x = 0; x < (SIZE_X ); x++)
 		{
 			*base = *shared++;
 			#if DEBUG == 1
@@ -275,7 +242,7 @@ void write_sram(unsigned char *base){
 			base++;
 		}
 		#if DEBUG == 1
-		printf("\n");
+	    printf("\n");
 		#endif
 	}
 }
@@ -309,21 +276,22 @@ void task1(void* pdata)
 {
 	INT8U err;
 	INT8U value=0;
-	char current_image=0;
 	int i;
-	#if DEBUG == 1
+    char current_image=0;
+#if DEBUG == 1
 /* Sequence of images for testing if the system functions properly */
     unsigned char out[403];
     char number_of_images=10;
-    unsigned char* img_array[10] = {img1_24_24, img1_32_22, img1_32_32, img1_40_28, img1_40_40, 
-    img2_24_24, img2_32_22, img2_32_32, img2_40_28, img2_40_40 };
+    /*unsigned char* img_array[10] = {img1_24_24, img1_32_22, img1_32_32, img1_40_28, img1_40_40, 
+    img2_24_24, img2_32_22, img2_32_32, img2_40_28, img2_40_40 };*/
+    unsigned char* img_array[10] = {circle20x20, circle24x24, circle32x22,circle32x32, circle40x28, 
+    circle40x40, rectangle20x20, rectangle24x24, rectangle32x22,  rectangle40x40};
 #else
 /* Sequence of images for measuring performance */
     char number_of_images=3;
     unsigned char out[260];
-    unsigned char* img_array[3] = {img1_32_32, img2_32_32, img3_32_32};
+    unsigned char* img_array[3] = {circle32x32, rectangle32x32, circle32x32};
 #endif
-
 
 #if DEBUG == 1
     PERF_RESET(PERFORMANCE_COUNTER_0_BASE);
@@ -334,7 +302,6 @@ void task1(void* pdata)
     grayscale();
     interpolation();
     edge_detection();
-	ascii_art();
     write_sram(out);            
             
    PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_1); 

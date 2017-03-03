@@ -10,7 +10,8 @@
 #include <stdlib.h>
 #include "altera_avalon_performance_counter.h"
 #include "system.h"
-#include "images.h"
+//#include "images.h"
+#include "images_alt.h"
 #include "io.h"
 
 #define DEBUG 1
@@ -44,6 +45,7 @@ void sram2sm_p3(int* base)
 	}
 
 }
+
 void grayscale(){
     int x, y;
 	unsigned char* shared;
@@ -69,69 +71,33 @@ void grayscale(){
 	    }
 	}
 }
-/*
-void grayscale(){
-    int x, y;
-	unsigned char* shared;
-
-	shared = (unsigned char*) SHARED_ONCHIP_BASE;
-	int size_x = *shared++;
-	int size_y = *shared++;
-    shared++;
-    unsigned char output_matrix [40][40];
-    int temp = 0;
-	for(y = 0; y < size_y; y++)
-	    {
-	    for(x = 0; x < size_x; x++)
-	    {
-	        temp = (*shared)<<2; // R
-	        temp += *shared++; // R
-	        temp += (*shared)<<3; // G
-	        temp += *shared++; // G
-	        temp = temp >> 4;
-	        temp += (*shared++)>> 3; //B
-		    output_matrix[x][y] = temp;
-	    }
-	}
-	shared = (unsigned char*) SHARED_ONCHIP_BASE;
-	shared += 3;
-	for(y = 0; y < size_y; y++){
-	    for(x = 0; x < size_x; x++){
-	        *shared++ = output_matrix[x][y];
-        }
-    }
-}
-*/
 
 /*
  * function for interpolating gray scale image 
  */
 void interpolation()
 {
-	int x, y;
-	unsigned char* shared;
-	shared = (unsigned char*) SHARED_ONCHIP_BASE;
-	unsigned char output_matrix [20][20];
-	unsigned char input_matrix [40][40];
-	int size_x = *shared++;
-	int size_y = *shared++;
-	shared++;
-    int i, j;
-	for(y = 0, j = 0; y < (size_y-1); y+=2,j++){
-	    for(x = 0, i = 0; x < (size_x-1); x+=2, i++){
-	    	   output_matrix[i][j] = (input_matrix[x][y] +input_matrix[x+1][y]
-	    	   +input_matrix[x][y+1] + input_matrix[x+1][y+1] ) >> 2;
-	    }
-	}
-	shared = (unsigned char*) SHARED_ONCHIP_BASE;
-	*shared++ = size_x >> 1;
-	*shared++ = size_y >> 1;
-	*shared++ = 225;
-	for(y = 0; y <  size_y >> 1; y++){
-	    for(x = 0; x <  size_x >> 1; x++){
-	        *shared++ = output_matrix[x][y];
+
+	int x ,y; 
+    unsigned char*  gray = (unsigned char*) SHARED_ONCHIP_BASE;
+    int size_x= *gray++;
+    int size_y = *gray++;
+    gray++;
+    unsigned char* resize_imaged ;
+    resize_imaged = gray;
+    
+
+    
+    for(y = 0; y < size_y ; y+=2)
+        for( x = 0; x < size_x; x+=2){
+            *resize_imaged++ = ( *(gray+x) + *(gray + x + 1) + *(gray + (y+1)*size_x+x) 
+            + *(gray + (y+1)*size_x+ x + 1) ) >> 2 ;
         }
-    }
+	
+	//update size 
+	gray = (unsigned char*) SHARED_ONCHIP_BASE;
+	*gray++ = size_x >> 1;
+	*gray++ = size_y >> 1;
 }
 
 /*
@@ -164,15 +130,7 @@ void edge_detection()
 		
 	        gy[x-1][y-1] = (input_matrix[x-1][y-1] + (input_matrix[x-1][y]<<1) + input_matrix[x-1][y+1] )+
 	                        (-(input_matrix[x+1][y-1]) -  (input_matrix[x+1][y]<<1) -input_matrix[x+1][y+1] );
-	                        /*gx[x-1][y-1] = (-input_matrix[x-1][y-1] + v[x-1][y+1]) 
-	            + ( -(input_matrix[x][y-1]<<1) +(input_matrix[x][y+1]<<1) ) + 
-	        ( -input_matrix[x+1][y-1] +input_matrix[x+1][y+1] );*/
-		
-	       /* gy[x-1][y-1] = (input_matrix[x-1][y-1] + (input_matrix[x-1][y]<<1) + input_matrix[x-1][y+1] )+
-	                        (-(input_matrix[x+1][y-1]) -  (input_matrix[x+1][y]<<1) -input_matrix[x+1][y+1] );*/
             
-	       //if(gx[x-1][y-1]< 0) gx[x-1][y-1]= -gx[x-1][y-1];
-   	      // if(gy[x-1][y-1]< 0) gy[x-1][y-1]= -gy[x-1][y-1];
    	        output_matrix[x-1][y-1] = ascii_art(gx[x-1][y-1]*gx[x-1][y-1] + gy[x-1][y-1]*gy[x-1][y-1]);
 	    }
 	}
@@ -182,7 +140,7 @@ void edge_detection()
 	*shared++ = 255;
 	for(y = 0; y < size_y-2; y++){
 	    for(x = 0; x < size_x-2; x++){
-	        *shared++ = output_matrix[x-1][y-1];
+	        *shared++ = output_matrix[x][y];
         }
     }
 }
@@ -205,43 +163,43 @@ unsigned char ascii_art(int value)
         symbol = '.';
     }
     else if (value <= 15129){
-        symbol = ':';
+        symbol = ';';
     }
     else if (value <= 26896){
-        symbol = '=';
-    }
-    else if (value <= 42025){
-        symbol = '+';
-    }
-    else if (value <= 60516){
         symbol = '*';
     }
+    else if (value <= 42025){
+        symbol = 's';
+    }
+    else if (value <= 60516){
+        symbol = 't';
+    }
     else if (value <= 82369){
-        symbol = 'c';
+        symbol = 'I';
     }
     else if (value <= 107584){
-        symbol = 'i';
+        symbol = '(';
     }
     else if (value <= 136161){
-        symbol = 'x';
+        symbol = 'j';
     }
     else if (value <= 168100){
-        symbol = 'e';
+        symbol = 'u';
     }
     else if (value <= 203401){
-        symbol = 'o';
+        symbol = 'V';
     }
     else if (value <= 242064){
-        symbol = '&';
+        symbol = 'w';
     }
     else if (value <= 284089){
-        symbol = '8';
+        symbol = 'b';
     }
     else if (value <= 329476){
-        symbol = '#';
+        symbol = 'R';
     }
     else if (value <= 378225){
-        symbol = '%';
+        symbol = 'g';
     }
     else if (value > 378225) {
         symbol = '@';
@@ -273,18 +231,20 @@ void write_sram(unsigned char *base){
 
 int main(void) {
 
-char current_image=0;
+    char current_image=0; delay(1);
 #if DEBUG == 1
 /* Sequence of images for testing if the system functions properly */
     unsigned char out[403];
     char number_of_images=10;
-    unsigned char* img_array[10] = {img1_24_24, img1_32_22, img1_32_32, img1_40_28, img1_40_40, 
-    img2_24_24, img2_32_22, img2_32_32, img2_40_28, img2_40_40 };
+    /*unsigned char* img_array[10] = {img1_24_24, img1_32_22, img1_32_32, img1_40_28, img1_40_40, 
+    img2_24_24, img2_32_22, img2_32_32, img2_40_28, img2_40_40 };*/
+    unsigned char* img_array[10] = {circle20x20, circle24x24, circle32x22,circle32x32, circle40x28, 
+    circle40x40, rectangle20x20, rectangle24x24, rectangle32x22,  rectangle40x40};
 #else
 /* Sequence of images for measuring performance */
     char number_of_images=3;
     unsigned char out[260];
-    unsigned char* img_array[3] = {img1_32_32, img2_32_32, img3_32_32};
+    unsigned char* img_array[3] = {circle32x32, rectangle32x32, circle32x32};
 #endif
 
 while (1)
@@ -314,7 +274,7 @@ unsigned char j = *(img_array[current_image]+1);
    );   
 
    /* delay */
-   delay(500);
+   delay(1000);
    
    #else
        int k;
@@ -325,30 +285,11 @@ unsigned char j = *(img_array[current_image]+1);
    
        /* Measurement here */
        for(k = 0; k < 100; k++){
-            PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, 2);
             sram2sm_p3(img_array[current_image]);
-            PERF_END(PERFORMANCE_COUNTER_0_BASE, 2);
-            PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, 3);
             grayscale();
-            PERF_END(PERFORMANCE_COUNTER_0_BASE, 3);
-            PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, 4);
             interpolation();
-            PERF_END(PERFORMANCE_COUNTER_0_BASE, 4);
-            PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, 5);
             edge_detection();
-            PERF_END(PERFORMANCE_COUNTER_0_BASE, 5);
-            PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, 6);
             write_sram(out);
-            PERF_END(PERFORMANCE_COUNTER_0_BASE, 6);
-            PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_1); 
-             perf_print_formatted_report
-		        (PERFORMANCE_COUNTER_0_BASE,            
-		        ALT_CPU_FREQ,        // defined in "system.h"
-		        6,                   // How many sections to print
-		        "Total","Sram","grayscle","inte","sobel","write"        // Display-name of section(s).
-		        );
-	        // Print report 
-	        delay(10000);
             current_image=(current_image+1) % number_of_images; 
         }
         PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_1); 
