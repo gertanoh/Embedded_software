@@ -1,0 +1,12 @@
+
+
+------------------------------------------------
+
+To run lab2-multi,
+
+One need to run the script run_hello_mpsoc.sh.
+
+- For debug mode, update macro DEBUG to 1, The macro DEBUG can be found at the beginning of cpu_0.c (line 9).
+
+- For Performance mode, update macro DEBUG to 0, the number of pictures processed is 610. 
+- This number is hard coded, One can change this value in the loop at 133.
