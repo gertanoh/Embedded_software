@@ -3,119 +3,180 @@
 #include "altera_avalon_performance_counter.h"
 #include "system.h"
 #include "images_alt.h"
+#include "../shared_memory_mapping.h"
+#include <altera_avalon_mutex.h>
 
-
-#define DEBUG 1
-#define READ_OFFSET 4000
+#define DEBUG 0
 #define SECTION_1 1
 
 
-#define PICTURE_OFFSET 16
+
 /* set sof
  * flags for synchronisation 
  */
  
- 
-volatile unsigned char* flag_finish_sram = (volatile unsigned char*)SHARED_ONCHIP_BASE;
+ extern void delay (int millisec);
+
+ /* get pointers */
+volatile int* const flag_rgb = (volatile int*)FLAG_RGB_PIC;
+volatile int* const flag_ascii = (volatile int*)FLAG_ASCI_PIC;
+//volatile int* const square_addr = (volatile int*)
+/* to ensure that cpu_0 has read the old ascii picture before we add a new one
+ * we use masks, flag_ascii = 1111 when every cpu has put a picture 
+ * we could have used another pointer, but this might be faster by saving another read/write for 
+ * every quarter of the picture 
+ */
 
 
-volatile unsigned char* flag_finish_sobel_1 = (volatile unsigned char*)(SHARED_ONCHIP_BASE+1);
-volatile unsigned char* flag_finish_sobel_2 = (volatile unsigned char*)(SHARED_ONCHIP_BASE+2);
-volatile unsigned char* flag_finish_sobel_3 = (volatile unsigned char*)(SHARED_ONCHIP_BASE+3);
-volatile unsigned char* flag_finish_sobel_4 = (volatile unsigned char*)(SHARED_ONCHIP_BASE+4);
-
-volatile unsigned char* flag_finish_read_1 = (volatile unsigned char*)(SHARED_ONCHIP_BASE+9);
-volatile unsigned char* flag_finish_read_2 = (volatile unsigned char*)(SHARED_ONCHIP_BASE+10);
-volatile unsigned char* flag_finish_read_3 = (volatile unsigned char*)(SHARED_ONCHIP_BASE+11);
-volatile unsigned char* flag_finish_read_4 = (volatile unsigned char*)(SHARED_ONCHIP_BASE+12);
-
-
-unsigned char output[13][13];
-
-
-void sram2sm_p3(int* base)
+void sram2sm_p3(unsigned char* base, unsigned char* output)
 {
-	int  y;
-	//converting image to gray scale
-	// write 4 bytes to the shared memory
-	int *shared = (int*) (SHARED_ONCHIP_BASE+PICTURE_OFFSET);
-	for(y = 0; y < 768; y++)
-	{
-		*shared++ = *base++; 	// write of 4 bytes
+    
+    int x;
+    unsigned int  total_size = 3075;//32*32*3 + 3;
+    unsigned int size_4b = 768;//total_size >> 2;
+	
+	// get the size bits
+    unsigned int size_left  = total_size % 3;
+    
+    
 
-	}
+
+    unsigned int *input = (unsigned int *)base;
+    unsigned int *out = (unsigned int *)output;
+
+    for(x=0; x<size_4b; x++){
+        *out++ = *input++;
+    }
+	
+	// write the shift part of the size
+    base = (unsigned char *) input;
+    output = (unsigned char *) out;
+    for(x=0; x<size_left; x++){
+	    *output++ = *base++;
+    }
 
 }
 
-void write_to_sram(){
+void write_to_sram(unsigned char* input, unsigned char* output){
 
     int x , y;
-    unsigned char* base = (unsigned char*)(SHARED_ONCHIP_BASE+READ_OFFSET);
-    unsigned char size_x_off = 13;
-	unsigned char size_y_off = 13 ;
-	for(y = 0; y < size_y_off  ; y++){
-	    for(x = 0; x < size_x_off  ; x++){
-	        output[x][y] = *base++;
-	        #if DEBUG == 1
-			printf("%c",output[x][y]);	
-			#endif
+
+    unsigned char size_x = 14;
+	unsigned char size_y = 14 ;
+	for(y = 0; y < size_y  ; y++){
+	    for(x = 0; x < size_x  ; x++){
+               *output++ = *input++;
 	    }
-	    #if DEBUG == 1
-	    printf("\n");
-		#endif
 	}
 
 }
 
 
-    /*unsigned int volatile * const finish_pointer = (unsigned int *)FLAG_SOBEL_RAM_ADDR;
-    unsigned int volatile * const write_pointer = (unsigned int *)FLAG_WRITE_RAM_ADDR;*/
+  
 int main(void) {
 
 
+    alt_mutex_dev* mutex_0;
+	alt_mutex_dev* mutex_1;
+	
+	
+	/* mutexes for synchronisation */
+	
+	
+	mutex_0 = altera_avalon_mutex_open( "/dev/mutex_0" );
+	mutex_1 = altera_avalon_mutex_open( "/dev/mutex_1" );
+    
+    /* reset pointers */
+    while(altera_avalon_mutex_trylock(mutex_0, 1) != 0)	
+	{	
+	}
+	*flag_rgb = 0;
+	altera_avalon_mutex_unlock(mutex_0);
+	
+	while(altera_avalon_mutex_trylock(mutex_1, 1) != 0)	
+	{	
+	}
+	*flag_ascii = 0;
+                        
+	altera_avalon_mutex_unlock(mutex_1);
+    
+    // output
+    unsigned char output[14*14] __attribute__ ((aligned (4)));
+    
     int k = 0;
     char current_image=0;
     /* Sequence of images for measuring performance */
     char number_of_images=3;
     unsigned char* img_array[3] = {circle32x32, rectangle32x32, circle32x32};    
   
-    delay(2000);
+    delay(1500);
     /* write first buffer picture */
-    sram2sm_p3(img_array[current_image]);
+    
+    sram2sm_p3(img_array[current_image], (unsigned char*)RGB_ADDR);
+    /* set flags to 4 */
+    while(altera_avalon_mutex_trylock(mutex_0, 1) != 0)	
+	{	
+	}
+	*flag_rgb = 4;				
+	altera_avalon_mutex_unlock(mutex_0);
 
-    PERF_RESET(PERFORMANCE_COUNTER_0_BASE);
-    PERF_START_MEASURING (PERFORMANCE_COUNTER_0_BASE);
-    PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, SECTION_1);
-     *flag_finish_sram = 1; 
+    
+
         
     while(1){
     
    
-        for(k = 0; k <500;k++){
+    PERF_RESET(PERFORMANCE_COUNTER_0_BASE);
+    PERF_START_MEASURING (PERFORMANCE_COUNTER_0_BASE);
+    PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, SECTION_1);
+
+       for(k = 0; k< 610;k++){
+		   
+		   
             /* wait for everyone to put picture on chip */
-             while(!( *flag_finish_read_1 == 1 && *flag_finish_read_2 == 1
-                && *flag_finish_read_3 == 1 && *flag_finish_read_4 == 1 ));
-            *flag_finish_sram = 0;
+             while( *flag_rgb != 0);
+
             /* write another picure */
-             current_image=(current_image+1) % number_of_images;
-            sram2sm_p3(img_array[current_image]);
-            *flag_finish_sram = 1;
-            /*wait to read picture back to sram */
-            while(!( *flag_finish_sobel_1 == 1 && *flag_finish_sobel_2 == 1
-                && *flag_finish_sobel_3 == 1 && *flag_finish_sobel_4 == 1 ));
-            write_to_sram();
-            delay(1000);
             current_image=(current_image+1) % number_of_images;
+            sram2sm_p3(img_array[current_image], (unsigned char*)RGB_ADDR);
+            /* set flags to 4 */
+            while(altera_avalon_mutex_trylock(mutex_0, 1) != 0)	
+	        {	
+	        }
+	        *flag_rgb = 4;				
+	        altera_avalon_mutex_unlock(mutex_0);
+			
+			
+            /*wait to read picture back to sram */
+            while(*flag_ascii != 15);
+            
+            // write back picture
+            write_to_sram((unsigned char*)ASCII_ADDR, output);
+            #if DEBUG == 1
+		        int x, y, i = 0 ;
+		        for(y = 0; y < 14  ; y++){
+	                for(x = 0; x < 14 ; x++){
+                        printf("%c",output[i]);
+                        i++;
+	                }
+	                printf("\n");
+	            }
+		     delay(1000);
+		      #endif
+            altera_avalon_mutex_lock(mutex_1, 1);
+            *flag_ascii = 0;
+            altera_avalon_mutex_unlock(mutex_1);
+           // current_image=(current_image+1) % number_of_images;
         }
             PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_1); 
             perf_print_formatted_report
 		        (PERFORMANCE_COUNTER_0_BASE,            
 		        ALT_CPU_FREQ,        // defined in "system.h"
-		        3,                   // How many sections to print
-		        "Performance Mode","Update pointer write","pointer finish"        // Display-name of section(s).
+		        1,                   // How many sections to print
+		        "Performance Mode"        // Display-name of section(s).
 		        ); 
-		        
-		        delay(10000);
+		       
+		        delay(100);
 		        
     }    
     return 0;

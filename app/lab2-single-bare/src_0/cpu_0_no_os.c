@@ -103,11 +103,13 @@ void interpolation()
 /*
  * function for edge detection 
  */
+ 
 void edge_detection()
 {
 	int x, y;
-	int gx[18][18];
-	int gy[18][18];
+	
+	int gx;
+	int gy;
 	unsigned char output_matrix[18][18];
 	unsigned char input_matrix[20][20];
 	unsigned char* shared;
@@ -124,14 +126,16 @@ void edge_detection()
 	
 	for(y = 1; y < size_y-1; y++){
 	    for(x = 1; x < size_x-1; x++){
-	        gx[x-1][y-1] = (-input_matrix[x-1][y-1] + input_matrix[x-1][y+1]) 
+	        gx = (-input_matrix[x-1][y-1] + input_matrix[x-1][y+1]) 
 	            + ( -(input_matrix[x][y-1]<<1) +(input_matrix[x][y+1]<<1) ) + 
 	        ( -input_matrix[x+1][y-1] +input_matrix[x+1][y+1] );
 		
-	        gy[x-1][y-1] = (input_matrix[x-1][y-1] + (input_matrix[x-1][y]<<1) + input_matrix[x-1][y+1] )+
+	        gy = (input_matrix[x-1][y-1] + (input_matrix[x-1][y]<<1) + input_matrix[x-1][y+1] )+
 	                        (-(input_matrix[x+1][y-1]) -  (input_matrix[x+1][y]<<1) -input_matrix[x+1][y+1] );
             
-   	        output_matrix[x-1][y-1] = ascii_art(gx[x-1][y-1]*gx[x-1][y-1] + gy[x-1][y-1]*gy[x-1][y-1]);
+            
+            
+   	        output_matrix[x-1][y-1] = ascii_art(gx*gx + gy*gy);
 	    }
 	}
 	shared = (unsigned char*) SHARED_ONCHIP_BASE;

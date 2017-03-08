@@ -45,7 +45,7 @@ if [ ! -d $BSP_DIR/${BSP}_0 ] || [ "$REMAKE_BSP" = true ]; then
 	nios2-bsp hal $BSP_DIR/${BSP}_0 $CORE_DIR/$SOPCINFO.sopcinfo \
 		  --cpu-name ${CPU}0 \
 		  --set hal.make.bsp_cflags_debug -g \
-		  --set hal.make.bsp_cflags_optimization -Os \
+		  --set hal.make.bsp_cflags_optimization -O3 \
 		  --set hal.enable_small_c_library 1 \
 		  --set hal.enable_reduced_device_drivers 1 \
 		  --set hal.enable_lightweight_device_driver_api 1 \
