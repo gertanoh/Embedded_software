@@ -41,16 +41,18 @@ void shared2_chip_gray(unsigned char* input, unsigned char* output )
 	int x, y;
 	unsigned int temp = 0, value = 0;
     
-    
-    // here fixed size 
-    x_size = 16;
-    y_size = 16;
-    x_offset = 1584;//32*16*3 + 16*3; // it is cpu_4, fourth quarter, 
-    skip_offset = x_size ;
 
+
+ 	x_size = (*input++) >> 1;
+    y_size = (*input++) >> 1;
+    *input++;
+    
+    x_offset = ( (x_size << 1) * (y_size) * 3) + ( x_size  * 3 ) ;;//32*16*3 + 16*3; // it is cpu_4, fourth quarter, 
+    skip_offset = x_size ;
+ 
 	
 	// move pointer
-	input += x_offset + 3;
+	input += x_offset ;
 	for(y = 0; y < y_size ; y++){
 	    for(x = 0; x < x_size  ; x++){
             temp = *input++;
@@ -76,28 +78,27 @@ void interpolation(unsigned char* in, unsigned char* out)
 {
 	int x, y;
 	int x1,x2, y1, y2;
+	
+	int tmp_size = x_size;
 	x_size = x_size >> 1;
 	y_size = y_size >> 1;
 	
 	// calculate offset
 	skip_offset = x_size;
-	x_offset = 136;//16*8+8;
-	
-	
+	x_offset = ( (x_size << 1) * y_size) + x_size;
 	out+= x_offset;
 	
     for(y = 0; y < y_size; y++){
         for(x = 0; x < x_size; x++){
-          
-          x1 = *(in+16);
+          x1 = *(in+tmp_size);
           x2 = (*in++);
-          y1 = *(in+16);
+          y1 = *(in+tmp_size);
           y2 = (*in++);
           *out++ = (unsigned char)((x1 + x2 + y1 + y2)>>2);
 
         }
 
-    in += 16;
+    in += tmp_size;
     out += skip_offset;
 
   }
@@ -173,24 +174,29 @@ void edge_detection(unsigned char* in)
 	int x, y;
 	int gx;
 	int gy;
-	x_offset = 105;//14*7 + 7;
-	skip_offset = 7;
-	unsigned char sobel_input[9][9]; // new because we add one row, one column
-	unsigned char* base = (unsigned char*)(ASCII_ADDR);
-	base += x_offset;
 	
-	in = in + 119;//16*7 + 7;
+	unsigned char new_x_size = x_size + 1 ;
+	unsigned char new_y_size = y_size + 1 ;
+	
+	
+	x_offset = ( (x_size - 1) <<1) * (y_size - 1) + (x_size - 1);//14*7 + 7;
+	skip_offset = (x_size - 1);
+	unsigned char sobel_input[11][11]; // new because we add one row, one column
+	unsigned char* base = (unsigned char*)(ASCII_ADDR);
+	base += x_offset+3;
+	
+	in = in + ( ( x_size << 1) * (y_size - 1) ) + (x_size - 1);//16*7 + 7;
 	// copy the new input
 	unsigned int i, j ;
-	for(j = 0; j < 9; j++){
-    for(i = 0; i < 9; i++){
-        sobel_input[i][j] = *in++;
-    }
-    in = in + 7;
+	for(j = 0; j < new_y_size; j++){
+		for(i = 0; i < new_x_size; i++){
+		    sobel_input[i][j] = *in++;
+		}
+		in = in + skip_offset;
     }
 	
-	for(y = 1; y < 8; y++){
-	    for(x = 1; x < 8; x++){
+	for(y = 1; y < y_size; y++){
+	    for(x = 1; x < x_size; x++){
 	        gx = (-sobel_input[x-1][y-1] + sobel_input[x-1][y+1]) 
 	            + ( -(sobel_input[x][y-1]<<1) +(sobel_input[x][y+1]<<1) ) + 
 	        ( -sobel_input[x+1][y-1] +sobel_input[x+1][y+1] );

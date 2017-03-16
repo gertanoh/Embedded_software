@@ -6,7 +6,7 @@
 #include "../shared_memory_mapping.h"
 #include <altera_avalon_mutex.h>
 
-#define DEBUG 0
+#define DEBUG 1
 #define SECTION_1 1
 
 
@@ -32,8 +32,9 @@ void sram2sm_p3(unsigned char* base, unsigned char* output)
 {
     
     int x;
-    unsigned int  total_size = 3075;//32*32*3 + 3;
-    unsigned int size_4b = 768;//total_size >> 2;
+    unsigned int  total_size = (base[0] * base[1] * 3) + 3;
+    //3075;//32*32*3 + 3;
+    unsigned int size_4b = total_size >> 2;
 	
 	// get the size bits
     unsigned int size_left  = total_size % 3;
@@ -61,8 +62,14 @@ void write_to_sram(unsigned char* input, unsigned char* output){
 
     int x , y;
 
-    unsigned char size_x = 14;
-	unsigned char size_y = 14 ;
+    unsigned char size_x = *input++;
+	unsigned char size_y = *input++;
+	input++;
+	
+	*output++ = size_x;
+	*output++ = size_y;
+	*output++ = 255;
+	
 	for(y = 0; y < size_y  ; y++){
 	    for(x = 0; x < size_x  ; x++){
                *output++ = *input++;
@@ -101,13 +108,20 @@ int main(void) {
 	altera_avalon_mutex_unlock(mutex_1);
     
     // output
-    unsigned char output[14*14] __attribute__ ((aligned (4)));
+    unsigned char output[18*18+3] __attribute__ ((aligned (4)));
     
     int k = 0;
     char current_image=0;
-    /* Sequence of images for measuring performance */
+   #if DEBUG == 1
+	/* Sequence of images for testing if the system functions properly */
+    char number_of_images=10;
+    unsigned char* img_array[10] = {circle20x20, circle24x24, circle32x22,circle32x32, circle40x28, 
+    circle40x40, rectangle20x20, rectangle24x24, rectangle32x22,  rectangle40x40};
+	#else
+	/* Sequence of images for measuring performance */
     char number_of_images=3;
-    unsigned char* img_array[3] = {circle32x32, rectangle32x32, circle32x32};    
+    unsigned char* img_array[3] = {circle32x32, rectangle32x32, circle32x32};
+	#endif
   
     delay(1500);
     /* write first buffer picture */
@@ -125,12 +139,12 @@ int main(void) {
         
     while(1){
     
-   
+ 
     PERF_RESET(PERFORMANCE_COUNTER_0_BASE);
     PERF_START_MEASURING (PERFORMANCE_COUNTER_0_BASE);
     PERF_BEGIN(PERFORMANCE_COUNTER_0_BASE, SECTION_1);
 
-       for(k = 0; k< 610;k++){
+       for(k = 0; k< 580;k++){
 		   
 		   
             /* wait for everyone to put picture on chip */
@@ -152,31 +166,36 @@ int main(void) {
             
             // write back picture
             write_to_sram((unsigned char*)ASCII_ADDR, output);
-            #if DEBUG == 1
-		        int x, y, i = 0 ;
-		        for(y = 0; y < 14  ; y++){
-	                for(x = 0; x < 14 ; x++){
-                        printf("%c",output[i]);
-                        i++;
-	                }
-	                printf("\n");
-	            }
-		     delay(1000);
-		      #endif
             altera_avalon_mutex_lock(mutex_1, 1);
             *flag_ascii = 0;
             altera_avalon_mutex_unlock(mutex_1);
-           // current_image=(current_image+1) % number_of_images;
+            #if DEBUG == 1
+            int i = 0, x ,y;
+            int size_x = output[0];
+            int size_y = output[1];
+            
+            printf("-------------------Picture of size : %d, %d\n", size_x, size_y );
+             printf("\n");
+          printf("\n");
+            for(y = 0; y < size_y  ; y++){
+                for(x = 0; x < size_x; x++){
+                    printf("%c",output[i+3]);
+                    i++;
+                }
+                printf("\n");
+            }
+            delay(1000);
+            #endif
         }
-            PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_1); 
-            perf_print_formatted_report
-		        (PERFORMANCE_COUNTER_0_BASE,            
-		        ALT_CPU_FREQ,        // defined in "system.h"
-		        1,                   // How many sections to print
-		        "Performance Mode"        // Display-name of section(s).
-		        ); 
-		       
-		        delay(100);
+        PERF_END(PERFORMANCE_COUNTER_0_BASE, SECTION_1); 
+        perf_print_formatted_report
+	        (PERFORMANCE_COUNTER_0_BASE,            
+	        ALT_CPU_FREQ,        // defined in "system.h"
+	        1,                   // How many sections to print
+	        "Performance Mode"        // Display-name of section(s).
+	        ); 
+	       
+        delay(100);
 		        
     }    
     return 0;
