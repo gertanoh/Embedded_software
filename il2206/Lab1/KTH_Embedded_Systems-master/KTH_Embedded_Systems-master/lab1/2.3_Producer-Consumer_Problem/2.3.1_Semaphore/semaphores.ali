@@ -1,0 +1,63 @@
+V "GNAT Lib v4.4"
+P SS ZX
+R vnnnnnnnnnnnnnnvnnvnnnnvnvnnvnnnnvnnnnnnnvnnnnnnnnnnnnnnnnnnnnnnv2nnnnnnnnnnnn
+
+U semaphores%b		semaphores.adb		960bdc4e NE OO PK
+W system.tasking.protected_objects.operations%s  s-tpobop.adb  s-tpobop.ali
+
+U semaphores%s		semaphores.ads		70fdc8e4 EE NE OO PK
+W ada.exceptions%s	a-except.adb		a-except.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+W system%s		system.ads		system.ali
+W system.finalization_implementation%s  s-finimp.adb  s-finimp.ali
+W system.finalization_root%s  s-finroo.adb	s-finroo.ali
+W system.soft_links%s	s-soflin.adb		s-soflin.ali
+W system.tasking%s	s-taskin.adb		s-taskin.ali
+W system.tasking.protected_objects%s  s-taprob.adb  s-taprob.ali
+W system.tasking.protected_objects.entries%s  s-tpoben.adb  s-tpoben.ali
+
+D ada.ads		20070406091342 9c7dd3ea
+D a-except.ads		20090409232307 b54b55de
+D a-finali.ads		20090409232307 9eaacebd
+D a-filico.ads		20090409232307 9299732a
+D a-stream.ads		20090409232307 34aca5be
+D a-tags.ads		20090409232307 bfa07446
+D a-unccon.ads		20070406091342 51e09df2
+D interfac.ads		20090409232307 a69cad5c
+D i-c.ads		20070406091342 bc3ef662
+D semaphores.ads	20160919113417 70fdc8e4
+D semaphores.adb	20160919125443 e6f614aa
+D system.ads		20100127085936 15e10948
+D s-atacco.ads		20090409232307 60789a20
+D s-exctab.ads		20090409232307 5c1c61ae
+D s-finimp.ads		20090409232307 9449f4cb
+D s-finroo.ads		20090409232307 1408f9d1
+D s-linux.ads		20090409232307 ad070dbe
+D s-osinte.ads		20080408064315 b04c0edf
+D s-parame.ads		20090409232307 f32e56e9
+D s-secsta.ads		20090409232307 7bae3621
+D s-soflin.ads		20090409232307 0c6fd39d
+D s-stache.ads		20090409232307 257b3be8
+D s-stausa.ads		20090409232307 6ab7dd35
+D s-stalib.ads		20090409232307 52b793d5
+D s-stoele.ads		20090409232307 ed966df3
+D s-stoele.adb		20090409232307 e9998c78
+D s-stratt.ads		20090409232307 fef7c1da
+D s-tasinf.ads		20090409232307 268f0cd4
+D s-taspri.ads		20080408071349 5459bcd0
+D s-taskin.ads		20090409232307 376ff2dd
+D s-taprob.ads		20090409232307 5e00115c
+D s-tpoben.ads		20090409232307 37be425d
+D s-tpobop.ads		20090409232307 ccd38b83
+D s-traent.ads		20090409232307 bd5f2753
+D s-unstyp.ads		20090409232307 c0f9fae5
+X 10 semaphores.ads
+3K9*Semaphores 11l5 11e15 11|3b14 15l5 15t15
+4W19*CountingSemaphore 4d37 4d51 10l8 10e25 11|4b19 14l8 14t25
+4i37 Max{natural} 9r29
+4i51 Initial{natural} 8r26
+5Y13 Wait 11|5b13 8t12
+6Y13 Signal 11|10b13 13t12
+8i7 Count{natural} 11|5r23 7r17 7r26 10r25 12r17 12r26
+9i7 MaxCount{natural} 11|10r33
+

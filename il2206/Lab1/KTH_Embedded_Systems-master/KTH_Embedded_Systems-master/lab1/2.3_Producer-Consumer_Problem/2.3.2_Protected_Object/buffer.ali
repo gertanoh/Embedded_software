@@ -1,0 +1,74 @@
+V "GNAT Lib v4.4"
+P SS ZX
+R vnnnnnnnnnnnnnnvnnvnnnnvnvnnvnnnnvnnnnnnnvnnnnnnnnnnnnnnnnnnnnnnv2nnnnnnnnnnnn
+
+U buffer%b		buffer.adb		ec1d9955 NE OO PK
+W interfaces%s		interfac.ads		interfac.ali
+W system.tasking.protected_objects.operations%s  s-tpobop.adb  s-tpobop.ali
+
+U buffer%s		buffer.ads		50d8866c EE NE OO PK
+W ada.exceptions%s	a-except.adb		a-except.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+W system%s		system.ads		system.ali
+W system.finalization_implementation%s  s-finimp.adb  s-finimp.ali
+W system.finalization_root%s  s-finroo.adb	s-finroo.ali
+W system.soft_links%s	s-soflin.adb		s-soflin.ali
+W system.tasking%s	s-taskin.adb		s-taskin.ali
+W system.tasking.protected_objects%s  s-taprob.adb  s-taprob.ali
+W system.tasking.protected_objects.entries%s  s-tpoben.adb  s-tpoben.ali
+
+D ada.ads		20070406091342 9c7dd3ea
+D a-except.ads		20090409232307 b54b55de
+D a-finali.ads		20090409232307 9eaacebd
+D a-filico.ads		20090409232307 9299732a
+D a-stream.ads		20090409232307 34aca5be
+D a-tags.ads		20090409232307 bfa07446
+D a-unccon.ads		20070406091342 51e09df2
+D buffer.ads		20160919211728 50d8866c
+D buffer.adb		20160919211723 bcc51f39
+D interfac.ads		20090409232307 a69cad5c
+D i-c.ads		20070406091342 bc3ef662
+D system.ads		20100127085936 15e10948
+D s-atacco.ads		20090409232307 60789a20
+D s-exctab.ads		20090409232307 5c1c61ae
+D s-finimp.ads		20090409232307 9449f4cb
+D s-finroo.ads		20090409232307 1408f9d1
+D s-linux.ads		20090409232307 ad070dbe
+D s-osinte.ads		20080408064315 b04c0edf
+D s-parame.ads		20090409232307 f32e56e9
+D s-secsta.ads		20090409232307 7bae3621
+D s-soflin.ads		20090409232307 0c6fd39d
+D s-stache.ads		20090409232307 257b3be8
+D s-stausa.ads		20090409232307 6ab7dd35
+D s-stalib.ads		20090409232307 52b793d5
+D s-stoele.ads		20090409232307 ed966df3
+D s-stoele.adb		20090409232307 e9998c78
+D s-stratt.ads		20090409232307 fef7c1da
+D s-tasinf.ads		20090409232307 268f0cd4
+D s-taspri.ads		20080408071349 5459bcd0
+D s-taskin.ads		20090409232307 376ff2dd
+D s-taprob.ads		20090409232307 5e00115c
+D s-tpoben.ads		20090409232307 37be425d
+D s-tpobop.ads		20090409232307 ccd38b83
+D s-traent.ads		20090409232307 bd5f2753
+D s-unstyp.ads		20090409232307 c0f9fae5
+X 8 buffer.ads
+1K9*Buffer 17l5 17e11 9|1b14 17l5 17t11
+2i4*N{integer} 4r22 15r31 9|3r51
+3I12*Item{integer} 5r39
+4M9*Index 5r29 14r24
+5A9*Item_Array(3I12)<4M9> 13r10
+6i4*status{integer}
+8W19*CircularBuffer 16l8 16e22 9|2b19 16l8 16t22
+10Y13 write_one 10>23 9|3b13 8t13
+10i23 X{integer} 9|5r26
+11Y13 read_one 11<22 9|10b13 15t13
+11i22 X{integer} 9|12r13
+13a7 A{5A9} 9|5r13 12r18
+14m7 In_Ptr{4M9} 9|5r15 7r13 7r23
+14m15 Out_Ptr{4M9} 9|12r20 14r13 14r24
+15i7 Count{integer} 9|3r43 6r13 6r22 10r43 13r13 13r22
+X 9 buffer.adb
+3i23 X{integer}
+10i22 X{integer}
+

@@ -1,0 +1,49 @@
+V "GNAT Lib v4.4"
+P ZX
+R nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnvnnnnnnnvnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+
+U shared%b		shared.adb		13562868 NE OO PK
+W system.soft_links%s	s-soflin.adb		s-soflin.ali
+
+U shared%s		shared.ads		ee9dc612 EE NE OO PK
+W system.tasking%s	s-taskin.adb		s-taskin.ali
+W system.tasking.protected_objects%s  s-taprob.adb  s-taprob.ali
+
+D ada.ads		20070406091342 9c7dd3ea
+D a-except.ads		20090409232307 b54b55de
+D a-unccon.ads		20070406091342 51e09df2
+D interfac.ads		20090409232307 a69cad5c
+D i-c.ads		20070406091342 bc3ef662
+D shared.ads		20160914111437 ee9dc612
+D shared.adb		20160914111601 fdcbee7a
+D system.ads		20100127085936 15e10948
+D s-atacco.ads		20090409232307 60789a20
+D s-exctab.ads		20090409232307 5c1c61ae
+D s-linux.ads		20090409232307 ad070dbe
+D s-osinte.ads		20080408064315 b04c0edf
+D s-parame.ads		20090409232307 f32e56e9
+D s-soflin.ads		20090409232307 0c6fd39d
+D s-stache.ads		20090409232307 257b3be8
+D s-stausa.ads		20090409232307 6ab7dd35
+D s-stalib.ads		20090409232307 52b793d5
+D s-stoele.ads		20090409232307 ed966df3
+D s-stoele.adb		20090409232307 e9998c78
+D s-tasinf.ads		20090409232307 268f0cd4
+D s-taspri.ads		20080408071349 5459bcd0
+D s-taskin.ads		20090409232307 376ff2dd
+D s-taprob.ads		20090409232307 5e00115c
+D s-traent.ads		20090409232307 bd5f2753
+D s-unstyp.ads		20090409232307 c0f9fae5
+X 6 shared.ads
+1K9*Shared 11l5 11e11 7|1b14 23l5 23t11
+2W24*Shared_Variable 2d40 10l13 10e28 7|2b24 22l13 22t28
+2i40 Initial_Value{integer} 9r32
+4U27 Add 4>31 7|3b27 6l21 6t24
+4i31 Number{integer} 7|3b32 5r34
+5U27 Subtract 5>36 7|8b27 11l21 11t29
+5i36 Number{integer} 7|8b36 10r34
+6U27 Write 6>33 7|13b27 16t20
+6i33 Number{integer} 7|13b33 15r30
+7V26 Read{integer} 7|18b26 21l21 21t25
+9i17 X{integer} 7|5r25 5r30 10r25 10r30 15r25 20r32
+

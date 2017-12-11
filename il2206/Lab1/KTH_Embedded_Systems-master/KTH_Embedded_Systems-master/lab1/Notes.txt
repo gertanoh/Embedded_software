@@ -1,0 +1,75 @@
+-----------------------------------------------------------
+    Notes for 2.4.1 Periodic Tasks in Ada
+-----------------------------------------------------------
+
+1.
+The priorities are as follow:
+
+1. (Highest) Task_P20
+2. Task_P18
+...
+6. Task_10
+
+This is the order in which they first run (on single core). After this the order 
+is mixed due to variating "runtimes" or Delays.
+
+2.
+The used computer appears to be a quad core one, since four tasks are always
+started at once. First the four highest priority ones and then the rest + the 2
+highest onest that have run already (20 and 16)
+
+-----------------------------------------------------------
+    Notes for 2.4.2 Round-Robin Scheduling
+-----------------------------------------------------------
+
+For me the results are practically identical
+
+-----------------------------------------------------------
+    Notes for 2.4.4 Rate-Monotonic Scheduling
+-----------------------------------------------------------
+
+1. 
+	a) U = 3/4 --- T1 = (3,1), T2 = (4,1), T3 = (6,1)
+
+		0	1	2	3	4	5	6	7	8	9	10	11	12
+	T1 	|xxx|---|---|xxx|---|---|xxx|---|---|xxx|---|---|
+	T2 	|---|xxx|---|---|xxx|---|---|---|xxx|---|---|---|
+	T3 	|---|---|xxx|---|---|---|---|xxx|---|---|---|---|
+
+	b) The order varies, I have no idea why.
+
+2.	T4 = (9,2)
+		0	1	2	3	4	5	6	7	8	9	10	11	12	13	14	15	16	17	18....
+	T1 	|xxx|---|---|xxx|---|---|xxx|---|---|xxx|---|---|xxx|---|---|xxx|---|---|.....
+	T2 	|---|xxx|---|---|xxx|---|---|---|xxx|---|---|---|---|xxx|---|---|xxx|---|.....
+	T3 	|---|---|xxx|---|---|---|---|xxx|---|---|---|---|---|---|xxx|---|---|---|.....
+	T4 	|---|---|---|---|---|xxx|---|---|---|---|xxx|xxx|---|---|---|---|---|---|.....
+
+
+	T4 misses 1 execution time unit in Period 1.
+
+Ask someone to explain this assignment to you!
+
+-----------------------------------------------------------
+    Notes for 2.4.5
+-----------------------------------------------------------
+
+No overload detected. The Watchdog run superquick, Whats up with that? Ask for 
+clarification into the scheduling system, since it doesn't seem to follow the 
+theory in 2.4.4 either.
+
+-----------------------------------------------------------
+    Notes for 2.4.6
+-----------------------------------------------------------
+
+How does one divine the quantum used for Round-Robin in this instance. Also keep
+asking someone to explain the scheduling, since it still doesn't make any sense.
+Fill the Round-Robin below if you learn something.
+
+	0	1	2	3	4	5	6	7	8	9	10	11	12
+	T1 	|xxx|---|---|xxx|---|---|xxx|---|---|xxx|---|---|
+	T2 	|---|xxx|---|---|xxx|---|---|---|xxx|---|---|---|
+	T3 	|---|---|xxx|---|---|---|---|xxx|---|---|---|---|
+	T4 	|---|---|---|---|---|xxx|---|xxx|---|---|---|---|
+	T5 	|---|---|---|---|---|---|---|---|---|---|---|---|
+	T6 	|---|---|---|---|---|---|---|---|---|---|---|---|

@@ -1,0 +1,56 @@
+V "GNAT Lib v4.4"
+P ZX
+R nnnnnnvnnnnnnnnnnnnnvnnnnnnnnnnnnnnnvnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+
+U system_function_package%b  system_function_package.adb  2ae703de NE OO PK
+W ada.calendar.delays%s	a-caldel.adb		a-caldel.ali
+
+U system_function_package%s  system_function_package.ads  701341f9 EE NE OO PK
+W ada%s			ada.ads			ada.ali
+W ada.real_time%s	a-reatim.adb		a-reatim.ali
+
+D ada.ads		20070406091342 9c7dd3ea
+D a-calend.ads		20090409232307 19486c30
+D a-caldel.ads		20090409232307 c565f6eb
+D a-except.ads		20090409232307 b54b55de
+D a-reatim.ads		20090409232307 7c462ab4
+D a-unccon.ads		20070406091342 51e09df2
+D interfac.ads		20090409232307 a69cad5c
+D i-c.ads		20070406091342 bc3ef662
+D system.ads		20100127085936 15e10948
+D s-atacco.ads		20090409232307 60789a20
+D s-exctab.ads		20090409232307 5c1c61ae
+D s-linux.ads		20090409232307 ad070dbe
+D s-osinte.ads		20080408064315 b04c0edf
+D s-parame.ads		20090409232307 f32e56e9
+D s-soflin.ads		20090409232307 0c6fd39d
+D s-stache.ads		20090409232307 257b3be8
+D s-stausa.ads		20090409232307 6ab7dd35
+D s-stalib.ads		20090409232307 52b793d5
+D s-stoele.ads		20090409232307 ed966df3
+D s-stoele.adb		20090409232307 e9998c78
+D s-tasinf.ads		20090409232307 268f0cd4
+D s-taspri.ads		20080408071349 5459bcd0
+D s-taprop.ads		20090409232307 25a7965c
+D s-taskin.ads		20090409232307 376ff2dd
+D s-traent.ads		20090409232307 bd5f2753
+D s-unstyp.ads		20090409232307 c0f9fae5
+D system_function_package.ads  20160919104757 0c556b4d
+D system_function_package.adb  20160919102716 26b26893
+X 1 ada.ads
+16K9*Ada 19e8 27|1r6 2r5
+X 5 a-reatim.ads
+39K13*Real_Time 139e18 27|1w10 2r9
+46O9*Time_Span
+80V13*To_Duration{duration} 28|5r13 11r13 17r13
+85V13*Milliseconds{46O9} 28|5r25 11r25 17r25
+X 27 system_function_package.ads
+4K9*System_Function_Package 8l5 8e28 28|1b14 21l5 21t28
+5V13*System_A{integer} 5>22 28|3b13 7l8 7t16
+5i22 X{integer} 28|3b22 6r14
+6V13*System_B{integer} 6>22 28|9b13 13l8 13t16
+6i22 Y{integer} 28|9b22 12r14
+7V13*System_C{integer} 7>22 7>25 28|15b13 19l8 19t16
+7i22 X{integer} 28|15b22 18r14
+7i25 Y{integer} 28|15b25 18r18
+

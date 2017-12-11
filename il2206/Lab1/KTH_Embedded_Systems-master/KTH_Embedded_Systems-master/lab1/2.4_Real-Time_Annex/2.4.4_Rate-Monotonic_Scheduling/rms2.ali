@@ -1,0 +1,120 @@
+V "GNAT Lib v4.4"
+M P W=b
+P TF  SS ZX
+R nnnnnnvvnnnnnnnvnnvnvvvvvnvnvnnnnnvnnnnnnvnnnnvnvnnnnvnvnvvnnnnnnnnnnnv1+nnnnnn
+
+U rms2%b		rms2.adb		08b546a3 NE OO SU IU
+W ada%s			ada.ads			ada.ali
+W ada.exceptions%s	a-except.adb		a-except.ali
+W ada.real_time%s	a-reatim.adb		a-reatim.ali
+W ada.real_time.delays%s  a-retide.adb		a-retide.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+W ada.text_io%s		a-textio.adb		a-textio.ali
+W ada.text_io.float_aux%s  a-tiflau.adb		a-tiflau.ali
+W ada.text_io.generic_aux%s  a-tigeau.adb	a-tigeau.ali
+W ada.text_io.integer_aux%s  a-tiinau.adb	a-tiinau.ali
+W interfaces%s		interfac.ads		interfac.ali
+W system%s		system.ads		system.ali
+W system.arith_64%s	s-arit64.adb		s-arit64.ali
+W system.exn_lli%s	s-exnlli.adb		s-exnlli.ali
+W system.img_real%s	s-imgrea.adb		s-imgrea.ali
+W system.parameters%s	s-parame.adb		s-parame.ali
+W system.soft_links%s	s-soflin.adb		s-soflin.ali
+W system.task_info%s	s-tasinf.adb		s-tasinf.ali
+W system.tasking%s	s-taskin.adb		s-taskin.ali
+W system.tasking.stages%s  s-tassta.adb		s-tassta.ali
+
+D ada.ads		20070406091342 9c7dd3ea
+D a-except.ads		20090409232307 b54b55de
+D a-finali.ads		20090409232307 9eaacebd
+D a-filico.ads		20090409232307 9299732a
+D a-ioexce.ads		20070406091342 be0900a0
+D a-reatim.ads		20090409232307 7c462ab4
+D a-retide.ads		20090409232307 60afaac3
+D a-stream.ads		20090409232307 34aca5be
+D a-tags.ads		20090409232307 bfa07446
+D a-textio.ads		20090409232307 fe8af46e
+D a-tifiio.ads		20090409232307 fffdeb6a
+D a-tifiio.adb		20090409232307 ec0656cb
+D a-tiflau.ads		20090409232307 ce2abdd4
+D a-tigeau.ads		20090409232307 d1b5f6d0
+D a-tiinau.ads		20090409232307 2625f681
+D a-tiinio.ads		20090409232307 949a7272
+D a-tiinio.adb		20090409232307 cf5588a9
+D a-unccon.ads		20070406091342 51e09df2
+D interfac.ads		20090409232307 a69cad5c
+D i-c.ads		20070406091342 bc3ef662
+D i-cstrea.ads		20090409232307 e1e064a9
+D rms2.adb		20160919210312 8a799879
+D system.ads		20100127085936 15e10948
+D s-atacco.ads		20090409232307 60789a20
+D s-arit64.ads		20090409232307 ded5f422
+D s-crtl.ads		20090409232307 997234a1
+D s-exctab.ads		20090409232307 5c1c61ae
+D s-exnlli.ads		20090409232307 8d6d8b4b
+D s-ficobl.ads		20090409232307 8bb681e5
+D s-finimp.ads		20090409232307 9449f4cb
+D s-finroo.ads		20090409232307 1408f9d1
+D s-imgrea.ads		20090409232307 da88b2ff
+D s-linux.ads		20090409232307 ad070dbe
+D s-osinte.ads		20080408064315 b04c0edf
+D s-parame.ads		20090409232307 f32e56e9
+D s-secsta.ads		20090409232307 7bae3621
+D s-soflin.ads		20090409232307 0c6fd39d
+D s-stache.ads		20090409232307 257b3be8
+D s-stausa.ads		20090409232307 6ab7dd35
+D s-stalib.ads		20090409232307 52b793d5
+D s-stoele.ads		20090409232307 ed966df3
+D s-stoele.adb		20090409232307 e9998c78
+D s-stratt.ads		20090409232307 fef7c1da
+D s-tasinf.ads		20090409232307 268f0cd4
+D s-taspri.ads		20080408071349 5459bcd0
+D s-taprop.ads		20090409232307 25a7965c
+D s-taskin.ads		20090409232307 376ff2dd
+D s-tassta.ads		20090409232307 71d2b71d
+D s-traent.ads		20090409232307 bd5f2753
+D s-unstyp.ads		20090409232307 c0f9fae5
+D s-wchcon.ads		20090409232307 ab028799
+X 1 ada.ads
+16K9*Ada 19e8 22|3r6 3r23 4r6 4r25 10r31 11r26
+X 6 a-reatim.ads
+39K13*Real_Time 139e18 22|4w10 4r29
+41O9*Time 22|8r12 31r14
+46O9*Time_Span
+53V13*Clock{41O9} 22|43r38 60r13
+55V13*"+"{41O9} 22|37r23
+58V13*"-"{46O9} 22|43r44
+80V13*To_Duration{duration} 22|43r26
+85V13*Milliseconds{46O9} 22|37r25
+X 10 a-textio.ads
+48K13*Text_IO 506e16 22|3w10 3r27 10r35 11r30
+242U14*Put 22|44r10
+263U14*Put_Line 22|46r10
+X 11 a-tifiio.ads
+45k21*Fixed_IO 88e25 22|10r43
+67U14 Put 22|43r22[10]
+X 16 a-tiinio.ads
+45k21*Integer_IO 84e27 22|11r38
+65U14 Put 22|45r17[11]
+X 22 rms2.adb
+6U11*RMS2 6b11 62l5 62t9
+8o4 Start{6|41O9} 35r15 43r46 60m4
+10K12 Duration_IO[11|45] 43r10
+11K12 Int_IO[16|45] 45r10
+13T14 T 13d16 13d29 13d49 13d67 15e7 30b14 49l8 49t9 53r9 54r9 55r9 56r9
+13i16 Id{integer} 45r21
+13i29 Priority{integer} 14r23
+13i49 Period{integer} 37r38
+13i67 e{integer} 38r21
+17V13 F{integer} 17>15 19b13 28l8 28t9 38r19
+17i15 N{integer} 19b15 22r23
+20i7 X{integer} 24m13 27r14
+22i11 Index{integer}
+23i14 I{integer} 24r18
+31o7 Next{6|41O9} 35m7 37m10 37r18 47r22
+33i7 Dummy{integer} 38m10
+53t4 T1{13T14}
+54t4 T2{13T14}
+55t4 T3{13T14}
+56t4 T4{13T14}
+
